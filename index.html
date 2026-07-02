@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>MediRuta</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#16302B">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MediRuta">
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+
+:root{
+  --bg:#EFEEE7;
+  --panel:#FFFFFF;
+  --ink:#16302B;
+  --primary:#1F4D3D;
+  --accent:#2D6E5C;
+  --alert:#C1502E;
+  --success:#3F7A5E;
+  --line:#D9D6CB;
+  --muted:#6B6F69;
+  --font-display:'Fraunces', serif;
+  --font-body:'IBM Plex Sans', sans-serif;
+  --font-mono:'IBM Plex Mono', monospace;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+}
+.app-shell{
+  max-width:1100px;
+  margin:0 auto;
+  padding:28px 20px 60px;
+}
+.brand-row{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:14px;
+  margin-bottom:22px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.brand-mark{
+  width:34px;height:34px;
+  border-radius:50% 50% 50% 8px;
+  background:var(--primary);
+  display:flex;align-items:center;justify-content:center;
+}
+.brand-mark svg{width:18px;height:18px;}
+.brand h1{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:1.5rem;
+  margin:0;
+  letter-spacing:-0.01em;
+}
+.brand small{
+  display:block;
+  font-family:var(--font-mono);
+  font-size:0.68rem;
+  letter-spacing:0.06em;
+  color:var(--muted);
+  text-transform:uppercase;
+}
+
+.role-tabs{
+  display:flex;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:4px;
+  gap:2px;
+}
+.role-tabs button{
+  font-family:var(--font-mono);
+  font-size:0.75rem;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+  border:none;
+  background:transparent;
+  color:var(--muted);
+  padding:9px 18px;
+  border-radius:999px;
+  cursor:pointer;
+  transition:all .18s ease;
+}
+.role-tabs button.active{
+  background:var(--primary);
+  color:#fff;
+}
+
+.view{display:none;}
+.view.active{display:block;}
+
+/* ---------- shared card ---------- */
+.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:24px;
+}
+.card + .card{margin-top:16px;}
+.card h2{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:1.15rem;
+  margin:0 0 4px;
+}
+.card .sub{
+  color:var(--muted);
+  font-size:0.85rem;
+  margin:0 0 18px;
+}
+
+label{
+  display:block;
+  font-size:0.78rem;
+  font-weight:500;
+  margin:14px 0 6px;
+  color:var(--muted);
+}
+input,select{
+  width:100%;
+  padding:11px 13px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  font-family:var(--font-body);
+  font-size:0.92rem;
+  background:#FBFAF6;
+  color:var(--ink);
+}
+input:focus,select:focus{
+  outline:2px solid var(--accent);
+  outline-offset:1px;
+}
+.btn{
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:0.88rem;
+  border:none;
+  border-radius:10px;
+  padding:11px 18px;
+  cursor:pointer;
+  transition:transform .12s ease, opacity .12s ease;
+}
+.btn:active{transform:scale(0.98);}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-accent{background:var(--accent);color:#fff;}
+.btn-ghost{background:transparent;color:var(--primary);border:1px solid var(--line);}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* ---------- patient ---------- */
+.phone-wrap{
+  max-width:420px;
+  margin:0 auto;
+}
+.chain{
+  display:flex;
+  align-items:center;
+  margin:22px 0 6px;
+}
+.chain-step{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  position:relative;
+}
+.chain-dot{
+  width:30px;height:30px;
+  border-radius:50%;
+  background:#E4E1D6;
+  border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);
+  font-size:0.7rem;
+  color:var(--muted);
+  z-index:2;
+}
+.chain-step.done .chain-dot{
+  background:var(--success);
+  border-color:var(--success);
+  color:#fff;
+}
+.chain-step.current .chain-dot{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#fff;
+  box-shadow:0 0 0 4px rgba(45,110,92,0.18);
+}
+.chain-line{
+  position:absolute;
+  top:14px;
+  left:-50%;
+  width:100%;
+  height:3px;
+  background:var(--line);
+  z-index:1;
+}
+.chain-step.done .chain-line,
+.chain-step.current .chain-line{background:var(--success);}
+.chain-step:first-child .chain-line{display:none;}
+.chain-label{
+  font-size:0.66rem;
+  text-align:center;
+  margin-top:8px;
+  color:var(--muted);
+  line-height:1.25;
+}
+.chain-step.done .chain-label,
+.chain-step.current .chain-label{color:var(--ink);font-weight:600;}
+
+.order-id{
+  font-family:var(--font-mono);
+  background:#F2F0E8;
+  border-radius:8px;
+  padding:8px 12px;
+  font-size:0.78rem;
+  letter-spacing:0.03em;
+  display:inline-block;
+}
+.status-banner{
+  background:#EAF3EE;
+  border:1px solid #C7E1D2;
+  border-radius:12px;
+  padding:14px 16px;
+  font-size:0.86rem;
+  margin-top:18px;
+}
+
+/* ---------- tables / lists ---------- */
+.kpi-row{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:12px;
+  margin-bottom:18px;
+}
+.kpi{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:16px;
+}
+.kpi .num{
+  font-family:var(--font-display);
+  font-size:1.7rem;
+  font-weight:600;
+  color:var(--primary);
+}
+.kpi .lbl{
+  font-size:0.72rem;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:0.04em;
+}
+
+.order-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px 0;
+  border-bottom:1px solid var(--line);
+  flex-wrap:wrap;
+}
+.order-row:last-child{border-bottom:none;}
+.order-info .name{font-weight:600;font-size:0.92rem;}
+.order-info .meta{font-size:0.78rem;color:var(--muted);margin-top:2px;}
+.tag{
+  font-family:var(--font-mono);
+  font-size:0.65rem;
+  text-transform:uppercase;
+  letter-spacing:0.04em;
+  padding:5px 10px;
+  border-radius:999px;
+  white-space:nowrap;
+}
+.tag-pending{background:#FBE9DF;color:var(--alert);}
+.tag-authorized{background:#E2EFE8;color:var(--accent);}
+.tag-transit{background:#E2E8EF;color:#3A5C8A;}
+.tag-delivered{background:#E2EFE2;color:var(--success);}
+
+.empty-state{
+  text-align:center;
+  padding:30px 10px;
+  color:var(--muted);
+  font-size:0.85rem;
+}
+
+footer.note{
+  margin-top:28px;
+  font-size:0.74rem;
+  color:var(--muted);
+  text-align:center;
+}
+
+/* ---------- install banner ---------- */
+.install-banner{
+  position:fixed;
+  left:16px;right:16px;bottom:16px;
+  max-width:460px;
+  margin:0 auto;
+  background:var(--ink);
+  color:#fff;
+  border-radius:16px;
+  padding:14px 16px;
+  display:none;
+  align-items:center;
+  gap:12px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.25);
+  z-index:50;
+}
+.install-banner.show{display:flex;}
+.install-banner .ib-icon{
+  width:34px;height:34px;border-radius:9px;
+  background:#fff; flex-shrink:0;
+}
+.install-banner .ib-icon img{width:100%;height:100%;border-radius:9px;display:block;}
+.install-banner .ib-text{flex:1;font-size:0.78rem;line-height:1.3;}
+.install-banner .ib-text b{display:block;font-size:0.86rem;}
+.install-banner button{
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:0.78rem;
+  border:none;
+  border-radius:9px;
+  padding:8px 12px;
+  background:var(--accent);
+  color:#fff;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.install-banner .ib-close{
+  background:transparent;
+  color:#cfd3cf;
+  padding:8px 6px;
+  font-size:1rem;
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <div id="connStatus" style="display:none;background:#FBE9DF;color:#C1502E;border:1px solid #f0c4ad;border-radius:10px;padding:10px 14px;font-size:0.8rem;margin-bottom:14px;"></div>
+
+  <div class="brand-row">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5C5 9 7.5 6.5 11 6.5H13C16.5 6.5 19 9 19 12.5C19 16 16.5 18.5 13 18.5H11C7.5 18.5 5 16 5 12.5Z" stroke="white" stroke-width="1.6"/><line x1="12" y1="6.5" x2="12" y2="18.5" stroke="white" stroke-width="1.6"/></svg>
+      </div>
+      <div>
+        <h1>MediRuta</h1>
+        <small>EPS · Farmacias · Pacientes</small>
+      </div>
+    </div>
+    <div class="role-tabs">
+      <button data-role="paciente" class="active">Paciente</button>
+      <button data-role="farmacia">Farmacia</button>
+      <button data-role="eps">EPS</button>
+    </div>
+  </div>
+
+  <!-- ================= PACIENTE ================= -->
+  <div class="view active" id="view-paciente">
+    <div class="phone-wrap">
+
+      <div class="card" id="paciente-form-card">
+        <h2>Solicitar medicamento</h2>
+        <p class="sub">Deja tus datos para que tu EPS autorice el envío.</p>
+
+        <label>Nombre completo</label>
+        <input id="p-nombre" placeholder="Ej. Carlos Falcón Rojas">
+
+        <label>Número de documento</label>
+        <input id="p-doc" placeholder="Ej. 1032xxxxxx">
+
+        <label>EPS a la que estás afiliado</label>
+        <select id="p-eps">
+          <option>Nueva EPS</option>
+          <option>Sura EPS</option>
+          <option>Sanitas</option>
+          <option>Compensar</option>
+        </select>
+
+        <label>Medicamento (según fórmula médica)</label>
+        <input id="p-med" placeholder="Ej. Losartán 50mg x 30 tabletas">
+
+        <label>Dirección de entrega</label>
+        <input id="p-dir" placeholder="Ej. Cra 45 # 12-30, Bogotá">
+
+        <label>Teléfono de contacto</label>
+        <input id="p-tel" placeholder="Ej. 300 000 0000">
+
+        <div style="margin-top:20px;">
+          <button class="btn btn-primary" style="width:100%;" onclick="crearPedido()">Enviar solicitud</button>
+        </div>
+      </div>
+
+      <div class="card" id="paciente-tracking-card" style="display:none;">
+        <h2>Tu pedido</h2>
+        <p class="sub" id="p-track-med"></p>
+        <div class="order-id" id="p-track-id"></div>
+
+        <div class="chain" id="p-chain"></div>
+
+        <div class="status-banner" id="p-status-text"></div>
+
+        <div style="margin-top:18px;">
+          <button class="btn btn-ghost" style="width:100%;" onclick="nuevaSolicitud()">Hacer otra solicitud</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= FARMACIA ================= -->
+  <div class="view" id="view-farmacia">
+    <div class="card">
+      <h2>Bandeja de pedidos — Droguería San Rafael</h2>
+      <p class="sub">Pedidos ya autorizados por la EPS, listos para despachar.</p>
+      <div id="farmacia-list"></div>
+    </div>
+  </div>
+
+  <!-- ================= EPS ================= -->
+  <div class="view" id="view-eps">
+    <div class="kpi-row">
+      <div class="kpi"><div class="num" id="kpi-pendientes">0</div><div class="lbl">Por autorizar</div></div>
+      <div class="kpi"><div class="num" id="kpi-autorizados">0</div><div class="lbl">Autorizados</div></div>
+      <div class="kpi"><div class="num" id="kpi-entregados">0</div><div class="lbl">Entregados</div></div>
+      <div class="kpi"><div class="num">3</div><div class="lbl">Farmacias en red</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Solicitudes pendientes de autorización</h2>
+      <p class="sub">Verifica la fórmula y autoriza el envío para conectar al paciente con una farmacia de la red.</p>
+      <div id="eps-list"></div>
+    </div>
+  </div>
+
+  <footer class="note">Prototipo de demostración — los datos no se almacenan, solo viven en esta sesión.</footer>
+</div>
+
+<div class="install-banner" id="installBanner">
+  <div class="ib-icon"><img src="icon-192.png" alt=""></div>
+  <div class="ib-text">
+    <b>Instala MediRuta</b>
+    <span id="installText">Agrégala a tu pantalla de inicio para usarla como app.</span>
+  </div>
+  <button id="installBtn">Instalar</button>
+  <button class="ib-close" id="installClose">✕</button>
+</div>
+
+<script>
+/* =========================================================
+   CONFIGURA AQUÍ TU PROYECTO DE FIREBASE
+   (lo obtienes gratis en https://console.firebase.google.com
+   — instrucciones completas en README.md)
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBVCpAzje9pNMwYJAiI8ex7fLRPioPM8d0",
+  authDomain: "mediruta-c9521.firebaseapp.com",
+  projectId: "mediruta-c9521",
+  storageBucket: "mediruta-c9521.firebasestorage.app",
+  messagingSenderId: "376162797648",
+  appId: "1:376162797648:web:19f1fe0dc413a1ce68a955"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const pedidosRef = db.collection('pedidos');
+
+const STEPS = [
+  {key:'pendiente', label:'Solicitud enviada'},
+  {key:'autorizado', label:'Autorizado por EPS'},
+  {key:'transito', label:'En camino'},
+  {key:'entregado', label:'Entregado'}
+];
+
+let pedidos = [];
+let pedidoActivoPaciente = localStorage.getItem('mediruta_pedido_id') || null;
+let conectado = false;
+
+// Escucha en tiempo real: cualquier cambio en Firestore (desde cualquier
+// celular) se refleja aquí automáticamente.
+pedidosRef.orderBy('creado', 'desc').onSnapshot((snapshot) => {
+  conectado = true;
+  pedidos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderAll();
+}, (err) => {
+  console.error('Error de conexión con Firestore:', err);
+  document.getElementById('connStatus').textContent =
+    '⚠️ No se pudo conectar a la base de datos. Revisa firebaseConfig en index.html.';
+  document.getElementById('connStatus').style.display = 'block';
+});
+
+// ---------- role tabs ----------
+document.querySelectorAll('.role-tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.role-tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-' + btn.dataset.role).classList.add('active');
+    renderAll();
+  });
+});
+
+function crearPedido(){
+  const nombre = document.getElementById('p-nombre').value.trim();
+  const doc = document.getElementById('p-doc').value.trim();
+  const eps = document.getElementById('p-eps').value;
+  const med = document.getElementById('p-med').value.trim();
+  const dir = document.getElementById('p-dir').value.trim();
+  const tel = document.getElementById('p-tel').value.trim();
+
+  if(!nombre || !doc || !med || !dir || !tel){
+    alert('Por favor completa todos los campos.');
+    return;
+  }
+
+  const codigo = 'MR-' + Math.floor(1000 + Math.random()*9000);
+
+  pedidosRef.add({
+    codigo, nombre, doc, eps, med, dir, tel,
+    status: 'pendiente',
+    creado: firebase.firestore.FieldValue.serverTimestamp()
+  }).then((docRef) => {
+    pedidoActivoPaciente = docRef.id;
+    localStorage.setItem('mediruta_pedido_id', docRef.id);
+    document.getElementById('paciente-form-card').style.display = 'none';
+    document.getElementById('paciente-tracking-card').style.display = 'block';
+    renderAll();
+  }).catch((err) => {
+    alert('No se pudo enviar la solicitud. Revisa tu conexión.');
+    console.error(err);
+  });
+}
+
+function nuevaSolicitud(){
+  pedidoActivoPaciente = null;
+  localStorage.removeItem('mediruta_pedido_id');
+  document.getElementById('paciente-form-card').style.display = 'block';
+  document.getElementById('paciente-tracking-card').style.display = 'none';
+  ['p-nombre','p-doc','p-med','p-dir','p-tel'].forEach(id=>document.getElementById(id).value='');
+}
+
+function autorizar(id){
+  pedidosRef.doc(id).update({ status: 'autorizado' });
+}
+
+function despachar(id){
+  pedidosRef.doc(id).update({ status: 'transito' });
+}
+
+function entregar(id){
+  pedidosRef.doc(id).update({ status: 'entregado' });
+}
+
+function statusIndex(status){
+  return STEPS.findIndex(s=>s.key===status);
+}
+
+function tagClass(status){
+  return {pendiente:'tag-pending', autorizado:'tag-authorized', transito:'tag-transit', entregado:'tag-delivered'}[status];
+}
+function tagLabel(status){
+  return {pendiente:'Pendiente', autorizado:'Autorizado', transito:'En camino', entregado:'Entregado'}[status];
+}
+
+function renderAll(){
+  renderPaciente();
+  renderFarmacia();
+  renderEPS();
+}
+
+function renderPaciente(){
+  if(!pedidoActivoPaciente){
+    document.getElementById('paciente-form-card').style.display = 'block';
+    document.getElementById('paciente-tracking-card').style.display = 'none';
+    return;
+  }
+  const ped = pedidos.find(p=>p.id===pedidoActivoPaciente);
+  if(!ped) return;
+
+  document.getElementById('paciente-form-card').style.display = 'none';
+  document.getElementById('paciente-tracking-card').style.display = 'block';
+
+  document.getElementById('p-track-med').textContent = ped.med;
+  document.getElementById('p-track-id').textContent = ped.codigo;
+
+  const idx = statusIndex(ped.status);
+  const chain = document.getElementById('p-chain');
+  chain.innerHTML = STEPS.map((s,i)=>{
+    let cls = '';
+    if(i < idx) cls = 'done';
+    else if(i === idx) cls = 'current';
+    return `<div class="chain-step ${cls}">
+      <div class="chain-line"></div>
+      <div class="chain-dot">${i+1}</div>
+      <div class="chain-label">${s.label}</div>
+    </div>`;
+  }).join('');
+
+  const messages = {
+    pendiente: 'Tu solicitud fue enviada a tu EPS. Estamos esperando autorización.',
+    autorizado: 'Tu EPS autorizó el medicamento. Una farmacia de la red lo va a despachar.',
+    transito: 'Tu medicamento va en camino a tu dirección.',
+    entregado: '¡Entregado! Gracias por usar MediRuta.'
+  };
+  document.getElementById('p-status-text').textContent = messages[ped.status];
+}
+
+function renderFarmacia(){
+  const list = document.getElementById('farmacia-list');
+  const visibles = pedidos.filter(p => p.status==='autorizado' || p.status==='transito' || p.status==='entregado');
+  if(visibles.length===0){
+    list.innerHTML = '<div class="empty-state">Aún no hay pedidos autorizados por una EPS.</div>';
+    return;
+  }
+  list.innerHTML = visibles.map(p=>`
+    <div class="order-row">
+      <div class="order-info">
+        <div class="name">${p.nombre} — ${p.med}</div>
+        <div class="meta">${p.dir} · ${p.codigo}</div>
+      </div>
+      <span class="tag ${tagClass(p.status)}">${tagLabel(p.status)}</span>
+      ${p.status==='autorizado' ? `<button class="btn btn-accent" onclick="despachar('${p.id}')">Despachar</button>` : ''}
+      ${p.status==='transito' ? `<button class="btn btn-primary" onclick="entregar('${p.id}')">Marcar entregado</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderEPS(){
+  document.getElementById('kpi-pendientes').textContent = pedidos.filter(p=>p.status==='pendiente').length;
+  document.getElementById('kpi-autorizados').textContent = pedidos.filter(p=>p.status==='autorizado' || p.status==='transito').length;
+  document.getElementById('kpi-entregados').textContent = pedidos.filter(p=>p.status==='entregado').length;
+
+  const list = document.getElementById('eps-list');
+  const pendientes = pedidos.filter(p=>p.status==='pendiente');
+  if(pendientes.length===0){
+    list.innerHTML = '<div class="empty-state">No hay solicitudes pendientes en este momento.</div>';
+    return;
+  }
+  list.innerHTML = pendientes.map(p=>`
+    <div class="order-row">
+      <div class="order-info">
+        <div class="name">${p.nombre} (${p.doc})</div>
+        <div class="meta">${p.eps} · ${p.med} · ${p.codigo}</div>
+      </div>
+      <button class="btn btn-primary" onclick="autorizar('${p.id}')">Autorizar</button>
+    </div>
+  `).join('');
+}
+
+renderAll();
+
+// ---------- PWA: service worker ----------
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
+
+// ---------- PWA: install banner ----------
+const banner = document.getElementById('installBanner');
+const installBtn = document.getElementById('installBtn');
+const installClose = document.getElementById('installClose');
+const installText = document.getElementById('installText');
+let deferredPrompt = null;
+
+const isIOS = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (!isStandalone) banner.classList.add('show');
+});
+
+installBtn.addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    banner.classList.remove('show');
+  } else if (isIOS) {
+    installText.textContent = 'Toca el ícono compartir (□↑) y luego "Agregar a pantalla de inicio".';
+  }
+});
+
+installClose.addEventListener('click', () => banner.classList.remove('show'));
+
+// iOS no dispara beforeinstallprompt: mostramos el banner con instrucciones manuales
+if (isIOS && !isStandalone) {
+  installText.textContent = 'Toca el ícono compartir (□↑) y luego "Agregar a pantalla de inicio".';
+  setTimeout(()=>banner.classList.add('show'), 1200);
+}
+</script>
+</body>
+</html>
