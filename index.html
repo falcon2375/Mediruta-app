@@ -15,6 +15,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
 
@@ -354,6 +355,51 @@ footer.note{
   padding:8px 6px;
   font-size:1rem;
 }
+
+/* ---------- login gate ---------- */
+.login-gate{
+  max-width:360px;
+  margin:40px auto;
+}
+.login-gate h2{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:1.2rem;
+  margin:0 0 4px;
+}
+.login-gate .sub{color:var(--muted);font-size:0.85rem;margin:0 0 18px;}
+.login-error{
+  background:#FBE9DF;
+  color:var(--alert);
+  border:1px solid #f0c4ad;
+  border-radius:10px;
+  padding:10px 14px;
+  font-size:0.8rem;
+  margin-top:10px;
+  display:none;
+}
+.login-error.show{display:block;}
+.session-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px 14px;
+  margin-bottom:16px;
+  font-size:0.8rem;
+}
+.session-bar .who{color:var(--muted);}
+.session-bar button{
+  background:transparent;
+  border:none;
+  color:var(--alert);
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:0.8rem;
+  cursor:pointer;
+}
 </style>
 </head>
 <body>
@@ -432,26 +478,70 @@ footer.note{
 
   <!-- ================= FARMACIA ================= -->
   <div class="view" id="view-farmacia">
-    <div class="card">
-      <h2>Bandeja de pedidos — Droguería San Rafael</h2>
-      <p class="sub">Pedidos ya autorizados por la EPS, listos para despachar.</p>
-      <div id="farmacia-list"></div>
+
+    <div class="login-gate" id="farmacia-login">
+      <div class="card">
+        <h2>Acceso de farmacia</h2>
+        <p class="sub">Ingresa con la cuenta asignada a tu droguería.</p>
+        <label>Correo</label>
+        <input type="email" id="farmacia-email" placeholder="farmacia@ejemplo.com">
+        <label>Contraseña</label>
+        <input type="password" id="farmacia-pass" placeholder="••••••••">
+        <div class="login-error" id="farmacia-login-error">Correo o contraseña incorrectos, o esta cuenta no tiene acceso de farmacia.</div>
+        <div style="margin-top:18px;">
+          <button class="btn btn-primary" style="width:100%;" onclick="loginRol('farmacia')">Ingresar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="farmacia-content" style="display:none;">
+      <div class="session-bar">
+        <span class="who">Conectado como <span id="farmacia-email-label"></span></span>
+        <button onclick="logout('farmacia')">Cerrar sesión</button>
+      </div>
+      <div class="card">
+        <h2>Bandeja de pedidos — Droguería San Rafael</h2>
+        <p class="sub">Pedidos ya autorizados por la EPS, listos para despachar.</p>
+        <div id="farmacia-list"></div>
+      </div>
     </div>
   </div>
 
   <!-- ================= EPS ================= -->
   <div class="view" id="view-eps">
-    <div class="kpi-row">
-      <div class="kpi"><div class="num" id="kpi-pendientes">0</div><div class="lbl">Por autorizar</div></div>
-      <div class="kpi"><div class="num" id="kpi-autorizados">0</div><div class="lbl">Autorizados</div></div>
-      <div class="kpi"><div class="num" id="kpi-entregados">0</div><div class="lbl">Entregados</div></div>
-      <div class="kpi"><div class="num">3</div><div class="lbl">Farmacias en red</div></div>
+
+    <div class="login-gate" id="eps-login">
+      <div class="card">
+        <h2>Acceso EPS</h2>
+        <p class="sub">Ingresa con la cuenta asignada a tu EPS.</p>
+        <label>Correo</label>
+        <input type="email" id="eps-email" placeholder="eps@ejemplo.com">
+        <label>Contraseña</label>
+        <input type="password" id="eps-pass" placeholder="••••••••">
+        <div class="login-error" id="eps-login-error">Correo o contraseña incorrectos, o esta cuenta no tiene acceso de EPS.</div>
+        <div style="margin-top:18px;">
+          <button class="btn btn-primary" style="width:100%;" onclick="loginRol('eps')">Ingresar</button>
+        </div>
+      </div>
     </div>
 
-    <div class="card">
-      <h2>Solicitudes pendientes de autorización</h2>
-      <p class="sub">Verifica la fórmula y autoriza el envío para conectar al paciente con una farmacia de la red.</p>
-      <div id="eps-list"></div>
+    <div id="eps-content" style="display:none;">
+      <div class="session-bar">
+        <span class="who">Conectado como <span id="eps-email-label"></span></span>
+        <button onclick="logout('eps')">Cerrar sesión</button>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi"><div class="num" id="kpi-pendientes">0</div><div class="lbl">Por autorizar</div></div>
+        <div class="kpi"><div class="num" id="kpi-autorizados">0</div><div class="lbl">Autorizados</div></div>
+        <div class="kpi"><div class="num" id="kpi-entregados">0</div><div class="lbl">Entregados</div></div>
+        <div class="kpi"><div class="num">3</div><div class="lbl">Farmacias en red</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Solicitudes pendientes de autorización</h2>
+        <p class="sub">Verifica la fórmula y autoriza el envío para conectar al paciente con una farmacia de la red.</p>
+        <div id="eps-list"></div>
+      </div>
     </div>
   </div>
 
@@ -485,7 +575,66 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 const pedidosRef = db.collection('pedidos');
+const rolesRef = db.collection('roles');
+
+let rolActual = { farmacia: null, eps: null }; // guarda el email conectado por rol
+
+// Fuente única de verdad de la sesión: se ejecuta al iniciar sesión, cerrar
+// sesión, y también al recargar la página (Firebase recuerda la sesión).
+auth.onAuthStateChanged((user) => {
+  if(!user){
+    ['farmacia','eps'].forEach(r=>{
+      document.getElementById(r+'-login').style.display = 'block';
+      document.getElementById(r+'-content').style.display = 'none';
+      rolActual[r] = null;
+    });
+    return;
+  }
+  rolesRef.doc(user.uid).get().then((doc) => {
+    if(doc.exists && (doc.data().role === 'farmacia' || doc.data().role === 'eps')){
+      const rol = doc.data().role;
+      document.getElementById(rol + '-login').style.display = 'none';
+      document.getElementById(rol + '-content').style.display = 'block';
+      document.getElementById(rol + '-email-label').textContent = user.email;
+      rolActual[rol] = user.email;
+      renderAll();
+    }
+  });
+});
+
+function loginRol(rol){
+  const email = document.getElementById(rol + '-email').value.trim();
+  const pass = document.getElementById(rol + '-pass').value;
+  const errorBox = document.getElementById(rol + '-login-error');
+  errorBox.classList.remove('show');
+
+  if(!email || !pass){
+    errorBox.textContent = 'Completa correo y contraseña.';
+    errorBox.classList.add('show');
+    return;
+  }
+
+  auth.signInWithEmailAndPassword(email, pass).then((cred) => {
+    return rolesRef.doc(cred.user.uid).get().then((doc) => {
+      if(!doc.exists || doc.data().role !== rol){
+        auth.signOut();
+        errorBox.textContent = 'Esta cuenta no tiene permisos de ' + rol + '.';
+        errorBox.classList.add('show');
+      }
+      // Si sí coincide el rol, onAuthStateChanged se encarga de mostrar el contenido.
+    });
+  }).catch((err) => {
+    errorBox.textContent = 'Correo o contraseña incorrectos.';
+    errorBox.classList.add('show');
+    console.error(err);
+  });
+}
+
+function logout(rol){
+  auth.signOut();
+}
 
 const STEPS = [
   {key:'pendiente', label:'Solicitud enviada'},
