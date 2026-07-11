@@ -1,4 +1,4 @@
-const CACHE_NAME = "mediruta-v1";
+const CACHE_NAME = "mediruta-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -24,12 +24,28 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  const wantsHTML =
+    req.mode === "navigate" ||
+    (req.method === "GET" && req.headers.get("accept") && req.headers.get("accept").includes("text/html"));
+
+  if (wantsHTML) {
+    // Network-first: siempre intenta traer la versión más reciente del sitio.
+    // Si no hay internet, cae de vuelta a la última copia guardada.
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const resClone = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
+          return res;
+        })
+        .catch(() => caches.match(req).then((cached) => cached || caches.match("./index.html")))
+    );
+    return;
+  }
+
+  // Cache-first para archivos estáticos (íconos, manifest): más rápido y no cambian seguido.
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return (
-        cached ||
-        fetch(event.request).catch(() => caches.match("./index.html"))
-      );
-    })
+    caches.match(req).then((cached) => cached || fetch(req))
   );
 });
