@@ -590,6 +590,7 @@ auth.onAuthStateChanged((user) => {
       document.getElementById(r+'-content').style.display = 'none';
       rolActual[r] = null;
     });
+    detenerEscuchaStaff();
     return;
   }
   rolesRef.doc(user.uid).get().then((doc) => {
@@ -599,6 +600,7 @@ auth.onAuthStateChanged((user) => {
       document.getElementById(rol + '-content').style.display = 'block';
       document.getElementById(rol + '-email-label').textContent = user.email;
       rolActual[rol] = user.email;
+      iniciarEscuchaStaff();
       renderAll();
     }
   });
@@ -643,22 +645,60 @@ const STEPS = [
   {key:'entregado', label:'Entregado'}
 ];
 
-let pedidos = [];
+let pedidos = []; // solo lo usan farmacia/eps, y solo mientras están logueados
 let pedidoActivoPaciente = localStorage.getItem('mediruta_pedido_id') || null;
+let pedidoPacienteDoc = null; // el pedido del paciente actual (un solo doc, no toda la colección)
 let conectado = false;
+let staffUnsub = null;
+let pacienteUnsub = null;
 
-// Escucha en tiempo real: cualquier cambio en Firestore (desde cualquier
-// celular) se refleja aquí automáticamente.
-pedidosRef.orderBy('creado', 'desc').onSnapshot((snapshot) => {
-  conectado = true;
-  pedidos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-  renderAll();
-}, (err) => {
-  console.error('Error de conexión con Firestore:', err);
-  document.getElementById('connStatus').textContent =
-    '⚠️ No se pudo conectar a la base de datos. Revisa firebaseConfig en index.html.';
-  document.getElementById('connStatus').style.display = 'block';
-});
+// ---------- Escucha para farmacia/EPS (solo activa mientras hay sesión con rol) ----------
+function iniciarEscuchaStaff(){
+  if(staffUnsub) return; // ya está escuchando
+  staffUnsub = pedidosRef.orderBy('creado', 'desc').onSnapshot((snapshot) => {
+    conectado = true;
+    pedidos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderFarmacia();
+    renderEPS();
+  }, (err) => {
+    console.error('Error de conexión con Firestore:', err);
+    document.getElementById('connStatus').textContent =
+      '⚠️ No se pudo conectar a la base de datos, o tu cuenta no tiene permisos suficientes.';
+    document.getElementById('connStatus').style.display = 'block';
+  });
+}
+
+function detenerEscuchaStaff(){
+  if(staffUnsub){ staffUnsub(); staffUnsub = null; }
+  pedidos = [];
+  renderFarmacia();
+  renderEPS();
+}
+
+// ---------- Escucha para el paciente (solo SU pedido, no la colección completa) ----------
+function iniciarEscuchaPaciente(id){
+  if(pacienteUnsub) pacienteUnsub();
+  pacienteUnsub = pedidosRef.doc(id).onSnapshot((doc) => {
+    conectado = true;
+    pedidoPacienteDoc = doc.exists ? { id: doc.id, ...doc.data() } : null;
+    renderPaciente();
+  }, (err) => {
+    console.error('Error escuchando el pedido del paciente:', err);
+    document.getElementById('connStatus').textContent =
+      '⚠️ No se pudo conectar a la base de datos.';
+    document.getElementById('connStatus').style.display = 'block';
+  });
+}
+
+function detenerEscuchaPaciente(){
+  if(pacienteUnsub){ pacienteUnsub(); pacienteUnsub = null; }
+  pedidoPacienteDoc = null;
+}
+
+// Si el paciente ya tenía un pedido activo (guardado en este navegador), retomamos su escucha
+if(pedidoActivoPaciente){
+  iniciarEscuchaPaciente(pedidoActivoPaciente);
+}
 
 // ---------- role tabs ----------
 document.querySelectorAll('.role-tabs button').forEach(btn=>{
@@ -695,7 +735,7 @@ function crearPedido(){
     localStorage.setItem('mediruta_pedido_id', docRef.id);
     document.getElementById('paciente-form-card').style.display = 'none';
     document.getElementById('paciente-tracking-card').style.display = 'block';
-    renderAll();
+    iniciarEscuchaPaciente(docRef.id);
   }).catch((err) => {
     alert('No se pudo enviar la solicitud. Revisa tu conexión.');
     console.error(err);
@@ -703,6 +743,7 @@ function crearPedido(){
 }
 
 function nuevaSolicitud(){
+  detenerEscuchaPaciente();
   pedidoActivoPaciente = null;
   localStorage.removeItem('mediruta_pedido_id');
   document.getElementById('paciente-form-card').style.display = 'block';
@@ -740,13 +781,12 @@ function renderAll(){
 }
 
 function renderPaciente(){
-  if(!pedidoActivoPaciente){
+  if(!pedidoActivoPaciente || !pedidoPacienteDoc){
     document.getElementById('paciente-form-card').style.display = 'block';
     document.getElementById('paciente-tracking-card').style.display = 'none';
     return;
   }
-  const ped = pedidos.find(p=>p.id===pedidoActivoPaciente);
-  if(!ped) return;
+  const ped = pedidoPacienteDoc;
 
   document.getElementById('paciente-form-card').style.display = 'none';
   document.getElementById('paciente-tracking-card').style.display = 'block';
