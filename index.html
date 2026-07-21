@@ -430,7 +430,7 @@ footer.note{
 <div class="card" id="paciente-login-screen">
   <h2>Ingresa como Paciente</h2>
   <input type="tel" id="pac-phone" placeholder="Ej: 3001234567" />
-  <button class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="enviarOTP()">Enviar código</button>
+  <button class="btn btn-primary" id="btn-enviar-otp" style="width:100%;margin-top:10px;" onclick="enviarOTP()">Enviar código</button>
   <div id="recaptcha-container"></div>
 
   <div id="pac-otp-section" style="display:none;margin-top:10px;">
@@ -673,7 +673,7 @@ function initRecaptcha() {
 }
 
 async function enviarOTP() {
-  const telefonoInput = document.getElementById('phone-input').value.trim();
+ const telefonoInput = document.getElementById('pac-phone').value.trim();
   let telefono = telefonoInput;
   if (!telefono.startsWith('+')) {
     telefono = '+57' + telefono.replace(/^0+/, '');
@@ -685,7 +685,7 @@ async function enviarOTP() {
   try {
     if (!window.recaptchaVerifier) initRecaptcha();
     confirmationResult = await auth.signInWithPhoneNumber(telefono, window.recaptchaVerifier);
-    document.getElementById('otp-section').style.display = 'block';
+    document.getElementById('pac-otp-section').style.display = 'block';
     document.getElementById('btn-enviar-otp').disabled = true;
   } catch (error) {
     console.error('Error enviando OTP:', error);
