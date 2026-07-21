@@ -427,38 +427,23 @@ footer.note{
   <!-- ================= PACIENTE ================= -->
   <div class="view active" id="view-paciente">
     <div class="phone-wrap">
+<div class="card" id="paciente-login-screen">
+  <h2>Ingresa como Paciente</h2>
+  <input type="tel" id="pac-phone" placeholder="Ej: 3001234567" />
+  <button class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="enviarOTP()">Enviar código</button>
+  <div id="recaptcha-container"></div>
 
-      <div class="card" id="paciente-form-card">
-        <h2>Solicitar medicamento</h2>
-        <p class="sub">Deja tus datos para que tu EPS autorice el envío.</p>
+  <div id="pac-otp-section" style="display:none;margin-top:10px;">
+    <input type="text" id="pac-otp" placeholder="Código de 6 dígitos" maxlength="6" />
+    <button class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="verificarOTP()">Verificar</button>
+  </div>
+</div>
 
-        <label>Nombre completo</label>
-        <input id="p-nombre" placeholder="Ej. Carlos Falcón Rojas">
-
-        <label>Número de documento</label>
-        <input id="p-doc" placeholder="Ej. 1032xxxxxx">
-
-        <label>EPS a la que estás afiliado</label>
-        <select id="p-eps">
-          <option>Nueva EPS</option>
-          <option>Sura EPS</option>
-          <option>Sanitas</option>
-          <option>Compensar</option>
-        </select>
-
-        <label>Medicamento (según fórmula médica)</label>
-        <input id="p-med" placeholder="Ej. Losartán 50mg x 30 tabletas">
-
-        <label>Dirección de entrega</label>
-        <input id="p-dir" placeholder="Ej. Cra 45 # 12-30, Bogotá">
-
-        <label>Teléfono de contacto</label>
-        <input id="p-tel" placeholder="Ej. 300 000 0000">
-
-        <div style="margin-top:20px;">
-          <button class="btn btn-primary" style="width:100%;" onclick="crearPedido()">Enviar solicitud</button>
-        </div>
-      </div>
+<div class="card" id="paciente-sin-pedidos" style="display:none;">
+  <h2>Aún no tienes pedidos</h2>
+  <p class="sub">Tu médico todavía no ha registrado una fórmula a tu nombre. Cuando lo haga, aparecerá aquí automáticamente.</p>
+</div>
+      
 
       <div class="card" id="paciente-tracking-card" style="display:none;">
         <h2>Tu pedido</h2>
@@ -471,7 +456,7 @@ footer.note{
         <div class="status-banner" id="p-status-text"></div>
 
         <div style="margin-top:18px;">
-          <button class="btn btn-ghost" style="width:100%;" onclick="nuevaSolicitud()">Hacer otra solicitud</button>
+         <button class="btn btn-ghost" style="width:100%;" onclick="logoutPaciente()">Cerrar sesión</button>
         </div>
       </div>
 
@@ -780,72 +765,101 @@ document.querySelectorAll('.role-tabs button').forEach(btn=>{
   });
 });
 
-function crearPedido(){
-  const nombre = document.getElementById('p-nombre').value.trim();
-  const doc = document.getElementById('p-doc').value.trim();
-  const eps = document.getElementById('p-eps').value;
-  const med = document.getElementById('p-med').value.trim();
-  const dir = document.getElementById('p-dir').value.trim();
-  const tel = document.getElementById('p-tel').value.trim();
 
-  if(!nombre || !doc || !med || !dir || !tel){
-    alert('Por favor completa todos los campos.');
-    return;
-  }
 
   const codigo = 'MR-' + Math.floor(1000 + Math.random()*9000);
 
-  pedidosRef.add({
-    codigo, nombre, doc, eps, med, dir, tel,
-    status: 'pendiente',
-    creado: firebase.firestore.FieldValue.serverTimestamp()
-  }).then((docRef) => {
-    pedidoActivoPaciente = docRef.id;
-    localStorage.setItem('mediruta_pedido_id', docRef.id);
-    document.getElementById('paciente-form-card').style.display = 'none';
-    document.getElementById('paciente-tracking-card').style.display = 'block';
-    iniciarEscuchaPaciente(docRef.id);
-  }).catch((err) => {
-    alert('No se pudo enviar la solicitud. Revisa tu conexión.');
-    console.error(err);
-  });
-}
-
-function crearPedidoMedico(){
-  if(!auth.currentUser){
-    alert('Tu sesión expiró, vuelve a iniciar sesión.');
-    return;
-  }
-
-  const nombre = document.getElementById('m-nombre').value.trim();
-  const doc = document.getElementById('m-doc').value.trim();
-  const eps = document.getElementById('m-eps').value;
-  const med = document.getElementById('m-med').value.trim();
-  const prescripcion = document.getElementById('m-prescripcion').value.trim();
-  const dir = document.getElementById('m-dir').value.trim();
-  const tel = document.getElementById('m-tel').value.trim();
 
   if(!nombre || !doc || !med || !prescripcion || !dir || !tel){
     alert('Por favor completa todos los campos, incluida la prescripción.');
     return;
   }
 
-  const codigo = 'MR-' + Math.floor(1000 + Math.random()*9000);
+ let confirmationResult = null;
+let pacienteCedula = null;
 
-  pedidosRef.add({
-    codigo, nombre, doc, eps, med, prescripcion, dir, tel,
-    status: 'pendiente',
-    medicoId: auth.currentUser.uid,
-    medicoEmail: auth.currentUser.email,
-    creado: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => {
-    ['m-nombre','m-doc','m-med','m-prescripcion','m-dir','m-tel'].forEach(id=>document.getElementById(id).value='');
-    alert('Fórmula generada. El paciente la verá al iniciar sesión, y ya quedó enviada a la EPS para autorización.');
-  }).catch((err) => {
-    alert('No se pudo generar la fórmula. Revisa tu conexión.');
-    console.error(err);
-  });
+function initRecaptcha() {
+  window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { size: 'invisible' });
 }
+
+function enviarOTP() {
+  const raw = document.getElementById('pac-phone').value.trim();
+  let phone = raw.replace(/\s|-/g, '');
+  if (!phone.startsWith('+')) phone = '+57' + phone.replace(/^0+/, '');
+  if (!/^\+57\d{10}$/.test(phone)) { alert('Número inválido. Escribe 10 dígitos, ej: 3001234567'); return; }
+  if (!window.recaptchaVerifier) initRecaptcha();
+
+  firebase.auth().signInWithPhoneNumber(phone, window.recaptchaVerifier)
+    .then(result => {
+      confirmationResult = result;
+      document.getElementById('pac-otp-section').style.display = 'block';
+    })
+    .catch(err => { console.error(err); alert('No se pudo enviar el código: ' + err.message); });
+}
+
+async function verificarOTP() {
+  const code = document.getElementById('pac-otp').value.trim();
+  if (!confirmationResult) { alert('Primero solicita el código.'); return; }
+  try {
+    await confirmationResult.confirm(code);
+    // onAuthStateChanged (más abajo) se encarga de cargar los datos del paciente
+  } catch (err) {
+    console.error(err);
+    alert('Código incorrecto o expirado.');
+  }
+}
+
+async function cargarPaciente(user){
+  const pacRef = db.collection('pacientes').doc(user.uid);
+  const snap = await pacRef.get();
+
+  if (snap.exists) {
+    pacienteCedula = snap.data().doc;
+  } else {
+    const cedula = prompt('Primera vez: escribe tu número de cédula (el mismo que le diste a tu médico)');
+    if (!cedula) { alert('Necesitas tu cédula para continuar.'); firebase.auth().signOut(); return; }
+    await pacRef.set({
+      uid: user.uid,
+      telefono: user.phoneNumber,
+      doc: cedula.trim(),
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    pacienteCedula = cedula.trim();
+  }
+
+  const q = await pedidosRef.where('doc','==',pacienteCedula).orderBy('creado','desc').limit(1).get();
+  if (!q.empty) {
+    iniciarEscuchaPaciente(q.docs[0].id);
+  } else {
+    pedidoActivoPaciente = null;
+    pedidoPacienteDoc = null;
+    renderPaciente();
+  }
+}
+
+function logoutPaciente(){
+  detenerEscuchaPaciente();
+  pedidoActivoPaciente = null;
+  pedidoPacienteDoc = null;
+  pacienteCedula = null;
+  firebase.auth().signOut();
+}
+
+firebase.auth().onAuthStateChanged(async (user) => {
+  if (user) {
+    const pacSnap = await db.collection('pacientes').doc(user.uid).get();
+    const esPaciente = pacSnap.exists || (window.recaptchaVerifier && confirmationResult);
+    if (esPaciente || pacSnap.exists) {
+      await cargarPaciente(user);
+    }
+  } else {
+    detenerEscuchaPaciente();
+    pedidoActivoPaciente = null;
+    pedidoPacienteDoc = null;
+    pacienteCedula = null;
+    renderPaciente();
+  }
+});
 
 function nuevaSolicitud(){
   detenerEscuchaPaciente();
@@ -891,14 +905,7 @@ function renderPaciente(){
     document.getElementById('paciente-form-card').style.display = 'block';
     document.getElementById('paciente-tracking-card').style.display = 'none';
     return;
-  }
-  const ped = pedidoPacienteDoc;
 
-  document.getElementById('paciente-form-card').style.display = 'none';
-  document.getElementById('paciente-tracking-card').style.display = 'block';
-
-  document.getElementById('p-track-med').textContent = ped.med;
-  const prescBox = document.getElementById('p-track-prescripcion');
   if(ped.prescripcion){
     prescBox.style.display = 'block';
     prescBox.innerHTML = '<strong>Indicaciones:</strong> ' + ped.prescripcion;
