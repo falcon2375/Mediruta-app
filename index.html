@@ -689,14 +689,16 @@ async function enviarOTP() {
 }
 
 async function verificarOTP() {
-  const codigo = document.getElementById('otp-input').value.trim();
+  const codigo = document.getElementById('pac-otp').value.trim();
   if (!confirmationResult) {
     alert('Primero solicita el código.');
     return;
   }
-  try {
-    const result = await confirmationResult.confirm(codigo);
-    await procesarPacienteAutenticado(result.user);
+try {
+    await confirmationResult.confirm(codigo);
+    // El listener onAuthStateChanged (línea ~924) detecta el login
+    // automáticamente y llama a cargarPaciente(user)
+  } catch (error) {
   } catch (error) {
     console.error('Error verificando OTP:', error);
     if (error.code === 'auth/invalid-verification-code') {
@@ -707,13 +709,8 @@ async function verificarOTP() {
   }
 }
 
-async function procesarPacienteAutenticado(user) {
-  const pacienteRef = pacientesRef.doc(user.uid);
-  const doc = await pacienteRef.get();
-  if (doc.exists) {
-    localStorage.setItem('mediruta_uid', user.uid);
-    cargarPanelPaciente(doc.data());
-  } else {
+
+   else {
     await pacienteRef.set({
       telefono: user.phoneNumber,
       creado: firebase.firestore.FieldValue.serverTimestamp(),
