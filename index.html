@@ -632,7 +632,8 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const pedidosRef = db.collection('pedidos');
 const rolesRef = db.collection('roles');
-
+const pacientesRef = db.collection('pacientes');
+let confirmationResult = null;
 let rolActual = { farmacia: null, eps: null, medico: null }; // guarda el email conectado por rol
 
 // Fuente única de verdad de la sesión: se ejecuta al iniciar sesión, cerrar
