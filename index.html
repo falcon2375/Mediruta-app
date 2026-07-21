@@ -657,9 +657,12 @@ auth.onAuthStateChanged((user) => {
       rolActual[rol] = user.email;
       iniciarEscuchaStaff();
       renderAll();
-    }
+ } else {
+        // No es staff — puede ser un paciente autenticado por teléfono
+        procesarPacienteAutenticado(user);
+      }
+    });
   });
-});
 
 function loginRol(rol){
   const email = document.getElementById(rol + '-email').value.trim();
