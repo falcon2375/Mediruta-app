@@ -664,7 +664,79 @@ auth.onAuthStateChanged((user) => {
     });
   });
 
-function loginRol(rol){
+// ============ AUTENTICACIÓN DE PACIENTES POR TELÉFONO ============
+
+function initRecaptcha() {
+  window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+    size: 'invisible'
+  });
+}
+
+async function enviarOTP() {
+  const telefonoInput = document.getElementById('phone-input').value.trim();
+  let telefono = telefonoInput;
+  if (!telefono.startsWith('+')) {
+    telefono = '+57' + telefono.replace(/^0+/, '');
+  }
+  if (!/^\+57\d{10}$/.test(telefono)) {
+    alert('Ingresa un número colombiano válido (10 dígitos).');
+    return;
+  }
+  try {
+    if (!window.recaptchaVerifier) initRecaptcha();
+    confirmationResult = await auth.signInWithPhoneNumber(telefono, window.recaptchaVerifier);
+    document.getElementById('otp-section').style.display = 'block';
+    document.getElementById('btn-enviar-otp').disabled = true;
+  } catch (error) {
+    console.error('Error enviando OTP:', error);
+    manejarErrorAuth(error);
+  }
+}
+
+async function verificarOTP() {
+  const codigo = document.getElementById('otp-input').value.trim();
+  if (!confirmationResult) {
+    alert('Primero solicita el código.');
+    return;
+  }
+  try {
+    const result = await confirmationResult.confirm(codigo);
+    await procesarPacienteAutenticado(result.user);
+  } catch (error) {
+    console.error('Error verificando OTP:', error);
+    if (error.code === 'auth/invalid-verification-code') {
+      alert('Código incorrecto. Intenta de nuevo.');
+    } else {
+      manejarErrorAuth(error);
+    }
+  }
+}
+
+async function procesarPacienteAutenticado(user) {
+  const pacienteRef = pacientesRef.doc(user.uid);
+  const doc = await pacienteRef.get();
+  if (doc.exists) {
+    localStorage.setItem('mediruta_uid', user.uid);
+    cargarPanelPaciente(doc.data());
+  } else {
+    await pacienteRef.set({
+      telefono: user.phoneNumber,
+      creado: firebase.firestore.FieldValue.serverTimestamp(),
+      role: 'paciente'
+    });
+    localStorage.setItem('mediruta_uid', user.uid);
+    mostrarFormularioDatosPaciente();
+  }
+}
+
+function manejarErrorAuth(error) {
+  const mensajes = {
+    'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos.',
+    'auth/invalid-phone-number': 'Número de teléfono inválido.',
+    'auth/quota-exceeded': 'Se alcanzó el límite diario de SMS del proyecto.'
+  };
+  alert(mensajes[error.code] || 'Error de autenticación: ' + error.message);
+}function loginRol(rol){
   const email = document.getElementById(rol + '-email').value.trim();
   const pass = document.getElementById(rol + '-pass').value;
   const errorBox = document.getElementById(rol + '-login-error');
