@@ -657,12 +657,7 @@ auth.onAuthStateChanged((user) => {
       rolActual[rol] = user.email;
       iniciarEscuchaStaff();
       renderAll();
- } else {
-        // No es staff — puede ser un paciente autenticado por teléfono
-        procesarPacienteAutenticado(user);
-      }
-    });
-  });
+
 
 // ============ AUTENTICACIÓN DE PACIENTES POR TELÉFONO ============
 
