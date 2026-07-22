@@ -658,36 +658,6 @@ auth.onAuthStateChanged((user) => {
       iniciarEscuchaStaff();
       renderAll();
 
-
-// ============ AUTENTICACIÓN DE PACIENTES POR TELÉFONO ============
-
-function initRecaptcha() {
-  window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-    size: 'invisible'
-  });
-}
-
-async function enviarOTP() {
- const telefonoInput = document.getElementById('pac-phone').value.trim();
-  let telefono = telefonoInput;
-  if (!telefono.startsWith('+')) {
-    telefono = '+57' + telefono.replace(/^0+/, '');
-  }
-  if (!/^\+57\d{10}$/.test(telefono)) {
-    alert('Ingresa un número colombiano válido (10 dígitos).');
-    return;
-  }
-  try {
-    if (!window.recaptchaVerifier) initRecaptcha();
-    confirmationResult = await auth.signInWithPhoneNumber(telefono, window.recaptchaVerifier);
-    document.getElementById('pac-otp-section').style.display = 'block';
-    document.getElementById('btn-enviar-otp').disabled = true;
-  } catch (error) {
-    console.error('Error enviando OTP:', error);
-    manejarErrorAuth(error);
-  }
-}
-
 async function verificarOTP() {
   const codigo = document.getElementById('pac-otp').value.trim();
   if (!confirmationResult) {
