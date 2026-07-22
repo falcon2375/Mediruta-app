@@ -719,6 +719,7 @@ function manejarErrorAuth(error) {
     'auth/quota-exceeded': 'Se alcanzó el límite diario de SMS del proyecto.'
   };
   alert(mensajes[error.code] || 'Error de autenticación: ' + error.message);
+  
 }function loginRol(rol){
   const email = document.getElementById(rol + '-email').value.trim();
   const pass = document.getElementById(rol + '-pass').value;
