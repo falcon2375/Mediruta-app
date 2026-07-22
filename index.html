@@ -658,38 +658,7 @@ auth.onAuthStateChanged((user) => {
       iniciarEscuchaStaff();
       renderAll();
 
-async function verificarOTP() {
-  const codigo = document.getElementById('pac-otp').value.trim();
-  if (!confirmationResult) {
-    alert('Primero solicita el código.');
-    return;
-  }
-try {
-    await confirmationResult.confirm(codigo);
-    // El listener onAuthStateChanged (línea ~924) detecta el login
-    // automáticamente y llama a cargarPaciente(user)
- 
-  } catch (error) {
-    console.error('Error verificando OTP:', error);
-    if (error.code === 'auth/invalid-verification-code') {
-      alert('Código incorrecto. Intenta de nuevo.');
-    } else {
-      manejarErrorAuth(error);
-    }
-  }
-}
 
-
-
-
-function manejarErrorAuth(error) {
-  const mensajes = {
-    'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos.',
-    'auth/invalid-phone-number': 'Número de teléfono inválido.',
-    'auth/quota-exceeded': 'Se alcanzó el límite diario de SMS del proyecto.'
-  };
-  alert(mensajes[error.code] || 'Error de autenticación: ' + error.message);
-  
 }function loginRol(rol){
   const email = document.getElementById(rol + '-email').value.trim();
   const pass = document.getElementById(rol + '-pass').value;
