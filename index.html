@@ -698,7 +698,7 @@ try {
     await confirmationResult.confirm(codigo);
     // El listener onAuthStateChanged (línea ~924) detecta el login
     // automáticamente y llama a cargarPaciente(user)
-  } catch (error) {
+ 
   } catch (error) {
     console.error('Error verificando OTP:', error);
     if (error.code === 'auth/invalid-verification-code') {
@@ -710,16 +710,7 @@ try {
 }
 
 
-   else {
-    await pacienteRef.set({
-      telefono: user.phoneNumber,
-      creado: firebase.firestore.FieldValue.serverTimestamp(),
-      role: 'paciente'
-    });
-    localStorage.setItem('mediruta_uid', user.uid);
-    mostrarFormularioDatosPaciente();
-  }
-}
+
 
 function manejarErrorAuth(error) {
   const mensajes = {
