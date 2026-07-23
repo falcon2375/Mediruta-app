@@ -107,7 +107,7 @@ body{
   background:var(--primary);
   color:#fff;
 }
-
+.staff-tab{display:none;}
 .view{display:none;}
 .view.active{display:block;}
 
@@ -1017,7 +1017,10 @@ function renderEPS(){
     </div>
   `).join('');
 }
-
+// Mostrar pestañas de staff solo con acceso especial (?staff=1 en la URL)
+if (new URLSearchParams(window.location.search).get('staff') === '1') {
+  document.querySelectorAll('.staff-tab').forEach(el => el.style.display = '');
+}
 renderAll();
 
 if ('serviceWorker' in navigator) {
