@@ -1,4 +1,4 @@
-const CACHE_NAME = mediruta-v6'
+const CACHE_NAME = 'mediruta-v6';
 const ASSETS = [
   "./",
   "./index.html",
