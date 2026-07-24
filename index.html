@@ -895,9 +895,11 @@ function logoutPaciente(){
   pedidoActivoPaciente = null;
   pedidoPacienteDoc = null;
   pacienteCedula = null;
+  pacienteDireccion = null;
+  document.getElementById('paciente-registro').style.display = 'none';
+  document.getElementById('paciente-login-screen').style.display = 'block';
   firebase.auth().signOut();
 }
-
 firebase.auth().onAuthStateChanged(async (user) => {
   if (user) {
     const pacSnap = await db.collection('pacientes').doc(user.uid).get();
