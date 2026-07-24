@@ -437,7 +437,16 @@ footer.note{
     <button class="btn btn-primary" style="width:100%;margin-top:10px;" onclick="verificarOTP()">Verificar</button>
   </div>
 </div>
-
+<div class="card" id="paciente-registro" style="display:none;">
+  <h2>Completa tu registro</h2>
+  <p class="sub">Necesitamos estos datos para conectar tu cuenta con tus fórmulas médicas.</p>
+  <label>Número de cédula</label>
+  <input type="text" id="reg-cedula" placeholder="Ej: 1032456789" />
+  <label>Dirección de entrega</label>
+  <input type="text" id="reg-direccion" placeholder="Ej: Cra 45 # 12-30, Bogotá" />
+  <p class="sub" style="margin:6px 0 0;font-size:0.75rem;">Tus medicamentos se entregarán en esta dirección.</p>
+  <button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="confirmarRegistroPaciente()">Continuar</button>
+</div>
 <div class="card" id="paciente-sin-pedidos" style="display:none;">
   <h2>Aún no tienes pedidos</h2>
   <p class="sub">Tu médico todavía no ha registrado una fórmula a tu nombre. Cuando lo haga, aparecerá aquí automáticamente.</p>
@@ -635,6 +644,7 @@ const rolesRef = db.collection('roles');
 const pacientesRef = db.collection('pacientes');
 let confirmationResult = null;
 let pacienteCedula = null;
+let pacienteDireccion = null;
 let rolActual = { farmacia: null, eps: null, medico: null };
 
 // ---------- Sesión de STAFF (médico / farmacia / eps) ----------
@@ -830,21 +840,49 @@ async function cargarPaciente(user){
 
   if (snap.exists) {
     pacienteCedula = snap.data().doc;
+    pacienteDireccion = snap.data().direccion || '';
+    document.getElementById('paciente-registro').style.display = 'none';
+    await buscarPedidoPaciente();
   } else {
-    const cedula = prompt('Primera vez: escribe tu número de cédula (el mismo que le diste a tu médico)');
-    if (!cedula) { alert('Necesitas tu cédula para continuar.'); firebase.auth().signOut(); return; }
-    await pacRef.set({
-      uid: user.uid,
-      telefono: user.phoneNumber,
-      doc: cedula.trim(),
-      creado: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    pacienteCedula = cedula.trim();
+    window.pacienteUserPendiente = user;
+    document.getElementById('paciente-login-screen').style.display = 'none';
+    document.getElementById('paciente-registro').style.display = 'block';
+  }
+}
+
+async function confirmarRegistroPaciente(){
+  const cedula = document.getElementById('reg-cedula').value.trim();
+  const direccion = document.getElementById('reg-direccion').value.trim();
+
+  if(!cedula || !direccion){
+    alert('Completa tu cédula y tu dirección de entrega.');
+    return;
   }
 
+  const user = window.pacienteUserPendiente;
+  await pacientesRef.doc(user.uid).set({
+    uid: user.uid,
+    telefono: user.phoneNumber,
+    doc: cedula,
+    direccion: direccion,
+    creado: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  pacienteCedula = cedula;
+  pacienteDireccion = direccion;
+  document.getElementById('paciente-registro').style.display = 'none';
+  await buscarPedidoPaciente();
+}
+
+async function buscarPedidoPaciente(){
   const q = await pedidosRef.where('doc','==',pacienteCedula).orderBy('creado','desc').limit(1).get();
   if (!q.empty) {
-    iniciarEscuchaPaciente(q.docs[0].id);
+    const pedidoDoc = q.docs[0];
+    const pedidoData = pedidoDoc.data();
+    if (pacienteDireccion && pedidoData.status === 'pendiente' && pedidoData.dir !== pacienteDireccion) {
+      await pedidosRef.doc(pedidoDoc.id).update({ dir: pacienteDireccion });
+    }
+    iniciarEscuchaPaciente(pedidoDoc.id);
   } else {
     pedidoActivoPaciente = null;
     pedidoPacienteDoc = null;
