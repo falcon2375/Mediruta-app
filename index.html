@@ -416,12 +416,15 @@ footer.note{
         <small>EPS · Farmacias · Pacientes</small>
       </div>
     </div>
-    <div class="role-tabs" id="roleTabs">
+  <div class="role-tabs" id="roleTabs">
   <button data-role="paciente" class="active">Paciente</button>
   <button data-role="medico" class="staff-tab">Médico</button>
   <button data-role="farmacia" class="staff-tab">Farmacia</button>
   <button data-role="eps" class="staff-tab">EPS</button>
 </div>
+</div>
+
+  <!-- ================= PACIENTE ================= -->
 
   <!-- ================= PACIENTE ================= -->
   <div class="view active" id="view-paciente">
@@ -989,7 +992,7 @@ function renderPaciente(){
     pendiente: 'Tu solicitud fue enviada a tu EPS. Estamos esperando autorización.',
     autorizado: 'Tu EPS autorizó el medicamento. Una farmacia de la red lo va a despachar.',
     transito: 'Tu medicamento va en camino a tu dirección.',
-    entregado: '¡Entregado! Gracias por usar MediRuta.'
+    entregado: '¡Entregado! Gracias por usar FarmaRuta.'
   };
   document.getElementById('p-status-text').textContent = messages[ped.status];
 }
