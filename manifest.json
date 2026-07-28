@@ -1,6 +1,6 @@
 {
-  "name": "farmaRuta",
-  "short_name": "farmaRuta",
+  "name": "FarmaRuta",
+  "short_name": "FarmaRuta",
   "description": "Conecta tu EPS, tu farmacia y tu domicilio para recibir tus medicamentos.",
   "start_url": "./index.html",
   "scope": "./",
