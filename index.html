@@ -768,11 +768,12 @@ rolesRef.doc(user.uid).get().then(async (doc) => {
       if(rol === 'medico'){
         mostrarTurnoActivo();
       }
-      if(rol === 'administrador'){
+if(rol === 'administrador'){
         cargarConsultorios();
       }
     }
-  }); 
+  });
+});
 
 function loginRol(rol){
   const email = document.getElementById(rol + '-email').value.trim();
@@ -976,6 +977,8 @@ document.querySelectorAll('.role-tabs button').forEach(btn=>{
     document.getElementById('view-' + btn.dataset.role).classList.add('active');
     renderAll();
   });
+});
+
 // ---------- Inicio de turno (identificación del médico en el consultorio) ----------
 function iniciarTurno(){
   const nombre = document.getElementById('turno-nombre').value.trim();
