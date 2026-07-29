@@ -418,13 +418,14 @@ footer.note{
     </div>
   <div class="role-tabs" id="roleTabs">
   <button data-role="paciente" class="active">Paciente</button>
-  <button data-role="medico" class="staff-tab">Médico</button>
+  <button data-role="medico" class="staff-tab">Consultorio</button>
   <button data-role="farmacia" class="staff-tab">Farmacia</button>
   <button data-role="eps" class="staff-tab">EPS</button>
+    <button data-role="administrador" class="staff-tab">Admin</button>
 </div>
 </div>
 
-  <!-- ================= PACIENTE ================= -->
+ 
 
   <!-- ================= PACIENTE ================= -->
   <div class="view active" id="view-paciente">
@@ -479,8 +480,8 @@ footer.note{
 
     <div class="login-gate" id="medico-login">
       <div class="card">
-        <h2>Acceso médico</h2>
-        <p class="sub">Ingresa con tu cuenta institucional.</p>
+       <h2>Acceso consultorio</h2>
+<p class="sub">Ingresa con la cuenta institucional del consultorio.</p>
         <label>Correo</label>
         <input type="email" id="medico-email" placeholder="medico@ejemplo.com">
         <label>Contraseña</label>
@@ -492,12 +493,30 @@ footer.note{
       </div>
     </div>
 
-    <div id="medico-content" style="display:none;">
+   <div id="medico-content" style="display:none;">
       <div class="session-bar">
         <span class="who">Conectado como <span id="medico-email-label"></span></span>
         <button onclick="logout('medico')">Cerrar sesión</button>
       </div>
 
+      <div class="session-bar" id="turno-activo-bar" style="display:none;">
+        <span class="who">En turno: <span id="turno-activo-nombre"></span></span>
+        <button onclick="cerrarTurno()">Cambiar de médico</button>
+      </div>
+
+      <div class="card" id="turno-inicio">
+        <h2>Inicio de turno</h2>
+        <p class="sub">Identifícate para firmar las fórmulas que generes en esta sesión.</p>
+        <label>Nombre completo</label>
+        <input type="text" id="turno-nombre" placeholder="Ej. Dra. Laura Gómez Ríos">
+        <label>Número de registro profesional (RETHUS)</label>
+        <input type="text" id="turno-rethus" placeholder="Ej. RM-123456">
+        <div style="margin-top:16px;">
+          <button class="btn btn-primary" style="width:100%;" onclick="iniciarTurno()">Comenzar turno</button>
+        </div>
+      </div>
+
+      <div id="medico-formularios" style="display:none;">
       <div class="card">
         <h2>Generar fórmula para paciente</h2>
         <p class="sub">El paciente no debe transcribir nada: al iniciar sesión verá esta información directamente.</p>
@@ -532,16 +551,17 @@ footer.note{
           <button class="btn btn-primary" style="width:100%;" onclick="crearPedidoMedico()">Generar fórmula y enviar a EPS</button>
         </div>
       </div>
-
-      <div class="card">
+<div class="card">
         <h2>Fórmulas generadas por ti</h2>
         <p class="sub">Últimas fórmulas creadas en esta sesión.</p>
         <div id="medico-list"></div>
+      </div>
       </div>
     </div>
   </div>
 
   <!-- ================= FARMACIA ================= -->
+    
   <div class="view" id="view-farmacia">
 
     <div class="login-gate" id="farmacia-login">
@@ -609,7 +629,69 @@ footer.note{
       </div>
     </div>
   </div>
+<!-- ================= ADMINISTRADOR ================= -->
+  <div class="view" id="view-administrador">
 
+    <div class="login-gate" id="administrador-login">
+      <div class="card">
+        <h2>Acceso administrador</h2>
+        <p class="sub">Ingresa con tu cuenta de administrador.</p>
+        <label>Correo</label>
+        <input type="email" id="administrador-email" placeholder="admin@ejemplo.com">
+        <label>Contraseña</label>
+        <input type="password" id="administrador-pass" placeholder="••••••••">
+        <div class="login-error" id="administrador-login-error">Correo o contraseña incorrectos, o esta cuenta no tiene acceso de administrador.</div>
+        <div style="margin-top:18px;">
+          <button class="btn btn-primary" style="width:100%;" onclick="loginRol('administrador')">Ingresar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="administrador-content" style="display:none;">
+      <div class="session-bar">
+        <span class="who">Conectado como <span id="administrador-email-label"></span></span>
+        <button onclick="logout('administrador')">Cerrar sesión</button>
+      </div>
+
+      <div class="card">
+        <h2>Crear nuevo consultorio</h2>
+        <p class="sub">Se genera una cuenta para el PC del consultorio. La contraseña solo la manejas tú.</p>
+        <label>Nombre o número del consultorio</label>
+        <input type="text" id="nc-nombre" placeholder="Ej. Consultorio 3 - Piso 2">
+        <label>Correo de la cuenta</label>
+        <input type="email" id="nc-email" placeholder="Ej. consultorio3@clinica.com">
+        <label>Contraseña</label>
+        <input type="password" id="nc-pass" placeholder="Mínimo 6 caracteres">
+        <div class="login-error" id="nc-error"></div>
+        <div style="margin-top:16px;">
+          <button class="btn btn-primary" style="width:100%;" onclick="crearConsultorio()">Crear consultorio</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Consultorios registrados</h2>
+        <p class="sub">Cada uno queda atado al primer PC donde se use. Si cambias de equipo, libera el dispositivo aquí.</p>
+        <div id="administrador-consultorios-list"></div>
+      </div>
+
+      <div class="card">
+        <h2>Buscar fórmulas generadas</h2>
+        <p class="sub">Filtra por nombre del médico, número de registro (RETHUS), o rango de fechas.</p>
+        <label>Nombre del médico</label>
+        <input type="text" id="bs-nombre" placeholder="Ej. Laura Gómez">
+        <label>Registro profesional (RETHUS)</label>
+        <input type="text" id="bs-rethus" placeholder="Ej. RM-123456">
+        <label>Desde</label>
+        <input type="date" id="bs-desde">
+        <label>Hasta</label>
+        <input type="date" id="bs-hasta">
+        <div style="margin-top:16px;">
+          <button class="btn btn-primary" style="width:100%;" onclick="buscarFormulas()">Buscar</button>
+        </div>
+        <div id="administrador-busqueda-resultados" style="margin-top:16px;"></div>
+      </div>
+    </div>
+  </div>
   <footer class="note">Prototipo de demostración — los datos no se almacenan, solo viven en esta sesión.</footer>
 </div>
 
@@ -653,7 +735,7 @@ let rolActual = { farmacia: null, eps: null, medico: null };
 // ---------- Sesión de STAFF (médico / farmacia / eps) ----------
 auth.onAuthStateChanged((user) => {
   if(!user){
-    ['farmacia','eps','medico'].forEach(r=>{
+    ['farmacia','eps','medico','administrador'].forEach(r=>{
       document.getElementById(r+'-login').style.display = 'block';
       document.getElementById(r+'-content').style.display = 'none';
       rolActual[r] = null;
@@ -661,18 +743,36 @@ auth.onAuthStateChanged((user) => {
     detenerEscuchaStaff();
     return;
   }
-  rolesRef.doc(user.uid).get().then((doc) => {
-    if(doc.exists && (doc.data().role === 'farmacia' || doc.data().role === 'eps' || doc.data().role === 'medico')){
+rolesRef.doc(user.uid).get().then(async (doc) => {
+    if(doc.exists && (doc.data().role === 'farmacia' || doc.data().role === 'eps' || doc.data().role === 'medico' || doc.data().role === 'administrador')){
       const rol = doc.data().role;
-      document.getElementById(rol + '-login').style.display = 'none';
+
+      if(rol === 'medico'){
+        const autorizado = await verificarDispositivoAutorizado(user);
+        if(!autorizado){
+          auth.signOut();
+          document.getElementById('medico-login-error').textContent =
+            'Esta cuenta solo puede usarse desde el computador autorizado del consultorio. Contacta al administrador si el equipo cambió.';
+          document.getElementById('medico-login-error').classList.add('show');
+          return;
+        }
+      }
+
+    document.getElementById(rol + '-login').style.display = 'none';
       document.getElementById(rol + '-content').style.display = 'block';
       document.getElementById(rol + '-email-label').textContent = user.email;
       rolActual[rol] = user.email;
       iniciarEscuchaStaff();
       renderAll();
+
+      if(rol === 'medico'){
+        mostrarTurnoActivo();
+      }
+      if(rol === 'administrador'){
+        cargarConsultorios();
+      }
     }
-  });
-});
+  }); 
 
 function loginRol(rol){
   const email = document.getElementById(rol + '-email').value.trim();
@@ -700,11 +800,114 @@ function loginRol(rol){
     console.error(err);
   });
 }
+// ---------- Administrador: crear consultorios ----------
+async function crearConsultorio(){
+  const nombreConsultorio = document.getElementById('nc-nombre').value.trim();
+  const email = document.getElementById('nc-email').value.trim();
+  const pass = document.getElementById('nc-pass').value;
+  const errorBox = document.getElementById('nc-error');
+  errorBox.classList.remove('show');
 
+  if(!nombreConsultorio || !email || !pass){
+    errorBox.textContent = 'Completa todos los campos.';
+    errorBox.classList.add('show');
+    return;
+  }
+  if(pass.length < 6){
+    errorBox.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    errorBox.classList.add('show');
+    return;
+  }
+
+  try {
+    // Instancia secundaria: crea el usuario nuevo sin cerrar la sesión del administrador
+    const secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary');
+    const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, pass);
+    const nuevoUid = cred.user.uid;
+    await secondaryApp.auth().signOut();
+    await secondaryApp.delete();
+
+    await rolesRef.doc(nuevoUid).set({ role: 'medico' });
+    await db.collection('consultorios').doc(nuevoUid).set({
+      nombre: nombreConsultorio,
+      email: email,
+      creado: firebase.firestore.FieldValue.serverTimestamp(),
+      creadoPor: auth.currentUser.uid
+    });
+
+    document.getElementById('nc-nombre').value = '';
+    document.getElementById('nc-email').value = '';
+    document.getElementById('nc-pass').value = '';
+    alert('Consultorio creado correctamente.');
+    cargarConsultorios();
+
+  } catch(err){
+    console.error(err);
+    errorBox.textContent = 'Error: ' + err.message;
+    errorBox.classList.add('show');
+  }
+}
+
+async function cargarConsultorios(){
+  const lista = document.getElementById('administrador-consultorios-list');
+  const snap = await db.collection('consultorios').orderBy('creado','desc').get();
+
+  if(snap.empty){
+    lista.innerHTML = '<div class="empty-state">Aún no has creado ningún consultorio.</div>';
+    return;
+  }
+
+  const filas = await Promise.all(snap.docs.map(async (doc) => {
+    const data = doc.data();
+    const lockSnap = await db.collection('device_locks').doc(doc.id).get();
+    const bloqueado = lockSnap.exists;
+    return `
+      <div class="order-row">
+        <div class="order-info">
+          <div class="name">${data.nombre}</div>
+          <div class="meta">${data.email} ${bloqueado ? '· PC vinculado' : '· Sin vincular aún'}</div>
+        </div>
+        ${bloqueado ? `<button class="btn btn-ghost" onclick="liberarDispositivo('${doc.id}')">Liberar PC</button>` : ''}
+      </div>
+    `;
+  }));
+
+  lista.innerHTML = filas.join('');
+}
+
+async function liberarDispositivo(uid){
+  if(!confirm('¿Liberar este consultorio? El próximo PC que use estas credenciales quedará vinculado.')) return;
+  await db.collection('device_locks').doc(uid).delete();
+  alert('Dispositivo liberado.');
+  cargarConsultorios();
+}
 function logout(rol){
   auth.signOut();
 }
+function getDeviceId(){
+  let id = localStorage.getItem('fr_device_id');
+  if(!id){
+    id = 'dev-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    localStorage.setItem('fr_device_id', id);
+  }
+  return id;
+}
 
+async function verificarDispositivoAutorizado(user){
+  const deviceId = getDeviceId();
+  const lockRef = db.collection('device_locks').doc(user.uid);
+  const snap = await lockRef.get();
+
+  if(!snap.exists){
+    await lockRef.set({
+      deviceId,
+      vinculado: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    return true;
+  }
+
+  return snap.data().deviceId === deviceId;
+}
 const STEPS = [
   {key:'pendiente', label:'Solicitud enviada'},
   {key:'autorizado', label:'Autorizado por EPS'},
@@ -773,7 +976,46 @@ document.querySelectorAll('.role-tabs button').forEach(btn=>{
     document.getElementById('view-' + btn.dataset.role).classList.add('active');
     renderAll();
   });
-});
+// ---------- Inicio de turno (identificación del médico en el consultorio) ----------
+function iniciarTurno(){
+  const nombre = document.getElementById('turno-nombre').value.trim();
+  const rethus = document.getElementById('turno-rethus').value.trim();
+
+  if(!nombre || !rethus){
+    alert('Completa tu nombre y tu número de registro profesional.');
+    return;
+  }
+
+  sessionStorage.setItem('fr_turno_nombre', nombre);
+  sessionStorage.setItem('fr_turno_rethus', rethus);
+  mostrarTurnoActivo();
+}
+
+function cerrarTurno(){
+  sessionStorage.removeItem('fr_turno_nombre');
+  sessionStorage.removeItem('fr_turno_rethus');
+  document.getElementById('turno-nombre').value = '';
+  document.getElementById('turno-rethus').value = '';
+  mostrarTurnoActivo();
+}
+
+function mostrarTurnoActivo(){
+  const nombre = sessionStorage.getItem('fr_turno_nombre');
+  const turnoInicio = document.getElementById('turno-inicio');
+  const turnoBar = document.getElementById('turno-activo-bar');
+  const formularios = document.getElementById('medico-formularios');
+
+  if(nombre){
+    turnoInicio.style.display = 'none';
+    turnoBar.style.display = 'flex';
+    formularios.style.display = 'block';
+    document.getElementById('turno-activo-nombre').textContent = nombre;
+  } else {
+    turnoInicio.style.display = 'block';
+    turnoBar.style.display = 'none';
+    formularios.style.display = 'none';
+  }
+}
 
 // ---------- Médico: crear fórmula ----------
 function crearPedidoMedico(){
@@ -784,6 +1026,14 @@ function crearPedidoMedico(){
   const prescripcion = document.getElementById('m-prescripcion').value.trim();
   const dir = document.getElementById('m-dir').value.trim();
   const tel = document.getElementById('m-tel').value.trim();
+
+  const medicoNombre = sessionStorage.getItem('fr_turno_nombre');
+  const medicoRethus = sessionStorage.getItem('fr_turno_rethus');
+
+  if(!medicoNombre || !medicoRethus){
+    alert('Debes iniciar tu turno antes de generar una fórmula.');
+    return;
+  }
 
   if(!nombre || !doc || !med || !prescripcion || !dir || !tel){
     alert('Por favor completa todos los campos, incluida la prescripción.');
@@ -796,6 +1046,9 @@ function crearPedidoMedico(){
     nombre, doc, eps, med, prescripcion, dir, tel, codigo,
     status: 'pendiente',
     medicoId: auth.currentUser.uid,
+    medicoEmail: auth.currentUser.email,
+    medicoNombre,
+    medicoRethus,
     creado: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
     ['m-nombre','m-doc','m-med','m-prescripcion','m-dir','m-tel'].forEach(id=>document.getElementById(id).value='');
@@ -892,7 +1145,58 @@ async function buscarPedidoPaciente(){
     renderPaciente();
   }
 }
+// ---------- Administrador: búsqueda de fórmulas ----------
+async function buscarFormulas(){
+  const nombre = document.getElementById('bs-nombre').value.trim().toLowerCase();
+  const rethus = document.getElementById('bs-rethus').value.trim().toLowerCase();
+  const desde = document.getElementById('bs-desde').value;
+  const hasta = document.getElementById('bs-hasta').value;
+  const resultados = document.getElementById('administrador-busqueda-resultados');
 
+  resultados.innerHTML = '<div class="empty-state">Buscando...</div>';
+
+  try {
+    let query = pedidosRef.orderBy('creado', 'desc');
+    const snap = await query.get();
+
+    let filas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    if(nombre){
+      filas = filas.filter(p => (p.medicoNombre || '').toLowerCase().includes(nombre));
+    }
+    if(rethus){
+      filas = filas.filter(p => (p.medicoRethus || '').toLowerCase().includes(rethus));
+    }
+    if(desde){
+      const desdeTs = new Date(desde).getTime();
+      filas = filas.filter(p => p.creado && p.creado.toMillis() >= desdeTs);
+    }
+    if(hasta){
+      const hastaTs = new Date(hasta).getTime() + 86400000; // incluye todo el día "hasta"
+      filas = filas.filter(p => p.creado && p.creado.toMillis() <= hastaTs);
+    }
+
+    if(filas.length === 0){
+      resultados.innerHTML = '<div class="empty-state">No se encontraron fórmulas con esos filtros.</div>';
+      return;
+    }
+
+    resultados.innerHTML = filas.map(p => `
+      <div class="order-row">
+        <div class="order-info">
+          <div class="name">${p.nombre} (${p.doc}) — ${p.med}</div>
+          <div class="meta">Firmado por: ${p.medicoNombre || '—'} · RETHUS: ${p.medicoRethus || '—'}</div>
+          <div class="meta">${p.creado ? new Date(p.creado.toMillis()).toLocaleString('es-CO') : ''} · ${p.codigo}</div>
+        </div>
+        <span class="tag ${tagClass(p.status)}">${tagLabel(p.status)}</span>
+      </div>
+    `).join('');
+
+  } catch(err){
+    console.error(err);
+    resultados.innerHTML = '<div class="empty-state">Error al buscar: ' + err.message + '</div>';
+  }
+}
 function logoutPaciente(){
   detenerEscuchaPaciente();
   pedidoActivoPaciente = null;
