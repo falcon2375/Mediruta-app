@@ -1392,7 +1392,7 @@ function renderEPS(){
 }
 // Mostrar pestañas de staff solo con acceso especial (?staff=1 en la URL)
 if (new URLSearchParams(window.location.search).get('staff') === '1') {
-  document.querySelectorAll('.staff-tab').forEach(el => el.style.display = '');
+ document.querySelectorAll('.staff-tab').forEach(el => el.classList.remove('staff-tab'));
 }
 renderAll();
 
