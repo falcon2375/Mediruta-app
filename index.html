@@ -801,7 +801,10 @@ function loginRol(rol){
     console.error(err);
   });
 }
+
 // ---------- Administrador: crear consultorios ----------
+// FIX #2: try/finally para asegurar que secondaryApp siempre se borre,
+// incluso si createUserWithEmailAndPassword falla (ej. correo duplicado).
 async function crearConsultorio(){
   const nombreConsultorio = document.getElementById('nc-nombre').value.trim();
   const email = document.getElementById('nc-email').value.trim();
@@ -820,21 +823,28 @@ async function crearConsultorio(){
     return;
   }
 
+  let secondaryApp = null;
   try {
     // Instancia secundaria: crea el usuario nuevo sin cerrar la sesión del administrador
-    const secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary');
-    const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, pass);
-    const nuevoUid = cred.user.uid;
-    await secondaryApp.auth().signOut();
-    await secondaryApp.delete();
+    secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary');
+    try {
+      const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, pass);
+      const nuevoUid = cred.user.uid;
+      await secondaryApp.auth().signOut();
 
-    await rolesRef.doc(nuevoUid).set({ role: 'medico' });
-    await db.collection('consultorios').doc(nuevoUid).set({
-      nombre: nombreConsultorio,
-      email: email,
-      creado: firebase.firestore.FieldValue.serverTimestamp(),
-      creadoPor: auth.currentUser.uid
-    });
+      await rolesRef.doc(nuevoUid).set({ role: 'medico' });
+      await db.collection('consultorios').doc(nuevoUid).set({
+        nombre: nombreConsultorio,
+        email: email,
+        creado: firebase.firestore.FieldValue.serverTimestamp(),
+        creadoPor: auth.currentUser.uid
+      });
+    } finally {
+      // Se ejecuta siempre, haya fallado o no la creación,
+      // para que la próxima llamada a crearConsultorio() no choque
+      // con una instancia 'Secondary' ya existente.
+      await secondaryApp.delete();
+    }
 
     document.getElementById('nc-nombre').value = '';
     document.getElementById('nc-email').value = '';
@@ -1133,6 +1143,10 @@ async function confirmarRegistroPaciente(){
   await buscarPedidoPaciente();
 }
 
+// FIX #1: ahora sí se asigna pedidoActivoPaciente y se persiste en
+// localStorage cuando se encuentra un pedido, y se limpia cuando no hay ninguno.
+// Antes esta variable nunca se escribía, así que renderPaciente() siempre
+// mostraba "Aún no tienes pedidos" aunque sí existiera un pedido.
 async function buscarPedidoPaciente(){
   const q = await pedidosRef.where('doc','==',pacienteCedula).orderBy('creado','desc').limit(1).get();
   if (!q.empty) {
@@ -1141,13 +1155,17 @@ async function buscarPedidoPaciente(){
     if (pacienteDireccion && pedidoData.status === 'pendiente' && pedidoData.dir !== pacienteDireccion) {
       await pedidosRef.doc(pedidoDoc.id).update({ dir: pacienteDireccion });
     }
+    pedidoActivoPaciente = pedidoDoc.id;
+    localStorage.setItem('mediruta_pedido_id', pedidoDoc.id);
     iniciarEscuchaPaciente(pedidoDoc.id);
   } else {
     pedidoActivoPaciente = null;
+    localStorage.removeItem('mediruta_pedido_id');
     pedidoPacienteDoc = null;
     renderPaciente();
   }
 }
+
 // ---------- Administrador: búsqueda de fórmulas ----------
 async function buscarFormulas(){
   const nombre = document.getElementById('bs-nombre').value.trim().toLowerCase();
@@ -1200,9 +1218,14 @@ async function buscarFormulas(){
     resultados.innerHTML = '<div class="empty-state">Error al buscar: ' + err.message + '</div>';
   }
 }
+
+// FIX #1 (complemento): limpiar localStorage al cerrar sesión del paciente,
+// para que el próximo paciente que use el mismo dispositivo/navegador
+// no herede el pedido de otra persona.
 function logoutPaciente(){
   detenerEscuchaPaciente();
   pedidoActivoPaciente = null;
+  localStorage.removeItem('mediruta_pedido_id');
   pedidoPacienteDoc = null;
   pacienteCedula = null;
   pacienteDireccion = null;
