@@ -89,6 +89,7 @@ body{
   border-radius:999px;
   padding:4px;
   gap:2px;
+  flex-wrap:wrap;
 }
 .role-tabs button{
   font-family:var(--font-mono);
@@ -167,6 +168,7 @@ input:focus,select:focus,textarea:focus{
 .btn-accent{background:var(--accent);color:#fff;}
 .btn-ghost{background:transparent;color:var(--primary);border:1px solid var(--line);}
 .btn:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-sm{padding:7px 12px;font-size:0.78rem;}
 
 /* ---------- patient ---------- */
 .phone-wrap{
@@ -298,6 +300,7 @@ input:focus,select:focus,textarea:focus{
 .tag-authorized{background:#E2EFE8;color:var(--accent);}
 .tag-transit{background:#E2E8EF;color:#3A5C8A;}
 .tag-delivered{background:#E2EFE2;color:var(--success);}
+.tag-zone{background:#EFE8F5;color:#6B3FA0;}
 
 .empty-state{
   text-align:center;
@@ -305,6 +308,18 @@ input:focus,select:focus,textarea:focus{
   color:var(--muted);
   font-size:0.85rem;
 }
+
+.zone-heading{
+  font-family:var(--font-mono);
+  font-size:0.72rem;
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+  color:var(--accent);
+  margin:18px 0 6px;
+  padding-top:14px;
+  border-top:1px dashed var(--line);
+}
+.zone-heading:first-child{border-top:none;padding-top:0;margin-top:0;}
 
 footer.note{
   margin-top:28px;
@@ -400,38 +415,29 @@ footer.note{
   font-size:0.8rem;
   cursor:pointer;
 }
- 394  .session-bar button{
-395    background:transparent;
-396    border:none;
-397    color:var(--alert);
-398    font-family:var(--font-body);
-399    font-weight:600;
-400    font-size:0.8rem;
-401    cursor:pointer;
-402  }
-403
-404  .pass-field{
-405    position:relative;
-406  }
-407  .pass-field input{
-408    padding-right:42px;
-409  }
-410  .pass-toggle{
-411    position:absolute;
-412    right:8px;
-413    top:50%;
-414    transform:translateY(-50%);
-415    background:none;
-416    border:none;
-417    cursor:pointer;
-418    padding:6px;
-419    color:var(--muted);
-420    display:flex;
-421    align-items:center;
-422    justify-content:center;
-423  }
-424  .pass-toggle:hover{color:var(--ink);}
-425  .pass-toggle svg{width:18px;height:18px;} 
+
+.pass-field{
+  position:relative;
+}
+.pass-field input{
+  padding-right:42px;
+}
+.pass-toggle{
+  position:absolute;
+  right:8px;
+  top:50%;
+  transform:translateY(-50%);
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:6px;
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.pass-toggle:hover{color:var(--ink);}
+.pass-toggle svg{width:18px;height:18px;}
 </style>
 </head>
 <body>
@@ -452,6 +458,7 @@ footer.note{
   <button data-role="paciente" class="active">Paciente</button>
   <button data-role="medico" class="staff-tab">Consultorio</button>
   <button data-role="farmacia" class="staff-tab">Farmacia</button>
+  <button data-role="domiciliario" class="staff-tab">Domiciliario</button>
   <button data-role="eps" class="staff-tab">EPS</button>
     <button data-role="administrador" class="staff-tab">Admin</button>
 </div>
@@ -517,7 +524,7 @@ footer.note{
         <label>Correo</label>
         <input type="email" id="medico-email" placeholder="medico@ejemplo.com">
         <label>Contraseña</label>
-      <div class="pass-field">
+        <div class="pass-field">
           <input type="password" id="medico-pass" placeholder="••••••••">
           <button type="button" class="pass-toggle" onclick="togglePass('medico-pass', this)" aria-label="Mostrar contraseña">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -584,12 +591,13 @@ footer.note{
 
         <label>Dirección de entrega</label>
         <input id="m-dir" placeholder="Ej. Cra 45 # 12-30, Bogotá">
+        <p class="sub" id="m-zona-preview" style="margin:6px 0 0;font-size:0.75rem;"></p>
 
         <label>Teléfono de contacto del paciente</label>
         <input id="m-tel" placeholder="Ej. 300 000 0000">
 
         <div style="margin-top:20px;">
-          <button class="btn btn-primary" style="width:100%;" onclick="crearPedidoMedico()">Generar fórmula y enviar a EPS</button>
+          <button class="btn btn-primary" style="width:100%;" id="btn-crear-pedido" onclick="crearPedidoMedico()">Generar fórmula y enviar a EPS</button>
         </div>
       </div>
 <div class="card">
@@ -636,8 +644,61 @@ footer.note{
       </div>
       <div class="card">
         <h2>Bandeja de pedidos — Droguería San Rafael</h2>
-        <p class="sub">Pedidos ya autorizados por la EPS, listos para despachar.</p>
+        <p class="sub">Pedidos ya autorizados por la EPS, agrupados por zona de entrega para que los alistes con anticipación.</p>
         <div id="farmacia-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= DOMICILIARIO ================= -->
+  <div class="view" id="view-domiciliario">
+
+    <div class="login-gate" id="domiciliario-login">
+      <div class="card">
+        <h2>Acceso domiciliario</h2>
+        <p class="sub">Ingresa con la cuenta que te asignó el administrador.</p>
+        <label>Correo</label>
+        <input type="email" id="domiciliario-email" placeholder="domiciliario@ejemplo.com">
+        <label>Contraseña</label>
+        <div class="pass-field">
+          <input type="password" id="domiciliario-pass" placeholder="••••••••">
+          <button type="button" class="pass-toggle" onclick="togglePass('domiciliario-pass', this)" aria-label="Mostrar contraseña">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+            </svg>
+          </button>
+        </div>
+        <div class="login-error" id="domiciliario-login-error">Correo o contraseña incorrectos, o esta cuenta no tiene acceso de domiciliario.</div>
+        <div style="margin-top:18px;">
+          <button class="btn btn-primary" style="width:100%;" onclick="loginRol('domiciliario')">Ingresar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="domiciliario-content" style="display:none;">
+      <div class="session-bar">
+        <span class="who">Conectado como <span id="domiciliario-email-label"></span> · Zona: <strong id="domiciliario-zona-label"></strong></span>
+        <button onclick="logout('domiciliario')">Cerrar sesión</button>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi"><div class="num" id="kpi-domiciliario-disponibles">0</div><div class="lbl">Disponibles en tu zona</div></div>
+        <div class="kpi"><div class="num" id="kpi-domiciliario-curso">0</div><div class="lbl">En curso</div></div>
+        <div class="kpi"><div class="num" id="kpi-domiciliario-hoy">0</div><div class="lbl">Entregados hoy</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Disponibles para recoger en tu zona</h2>
+        <p class="sub">Pedidos ya alistados por la farmacia, listos para que los tomes.</p>
+        <div id="domiciliario-disponibles-list"></div>
+      </div>
+
+      <div class="card">
+        <h2>Tus entregas en curso</h2>
+        <p class="sub">Marca como entregado cuando el paciente reciba el medicamento.</p>
+        <div id="domiciliario-curso-list"></div>
       </div>
     </div>
   </div>
@@ -662,7 +723,6 @@ footer.note{
             </svg>
           </button>
         </div>
-         
         <div class="login-error" id="eps-login-error">Correo o contraseña incorrectos, o esta cuenta no tiene acceso de EPS.</div>
         <div style="margin-top:18px;">
           <button class="btn btn-primary" style="width:100%;" onclick="loginRol('eps')">Ingresar</button>
@@ -699,7 +759,7 @@ footer.note{
         <label>Correo</label>
         <input type="email" id="administrador-email" placeholder="admin@ejemplo.com">
         <label>Contraseña</label>
-      <div class="pass-field">
+        <div class="pass-field">
           <input type="password" id="administrador-pass" placeholder="••••••••">
           <button type="button" class="pass-toggle" onclick="togglePass('administrador-pass', this)" aria-label="Mostrar contraseña">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -723,6 +783,23 @@ footer.note{
       </div>
 
       <div class="card">
+        <h2>Zonas de cobertura</h2>
+        <p class="sub">Cada fórmula se asigna automáticamente a la zona más cercana según su dirección de entrega.</p>
+        <label>Nombre de la zona</label>
+        <input type="text" id="zona-nombre" placeholder="Ej. Suba">
+        <label>Latitud del punto central</label>
+        <input type="text" id="zona-lat" placeholder="Ej. 4.7420">
+        <label>Longitud del punto central</label>
+        <input type="text" id="zona-lng" placeholder="Ej. -74.0930">
+        <div class="login-error" id="zona-error"></div>
+        <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="crearZona()">Agregar zona</button>
+          <button class="btn btn-ghost" onclick="cargarZonasEjemplo()">Cargar 10 zonas de ejemplo (Bogotá)</button>
+        </div>
+        <div id="administrador-zonas-list" style="margin-top:16px;"></div>
+      </div>
+
+      <div class="card">
         <h2>Crear nuevo consultorio</h2>
         <p class="sub">Se genera una cuenta para el PC del consultorio. La contraseña solo la manejas tú.</p>
         <label>Nombre o número del consultorio</label>
@@ -730,7 +807,7 @@ footer.note{
         <label>Correo de la cuenta</label>
         <input type="email" id="nc-email" placeholder="Ej. consultorio3@clinica.com">
         <label>Contraseña</label>
-       <div class="pass-field">
+        <div class="pass-field">
           <input type="password" id="nc-pass" placeholder="Mínimo 6 caracteres">
           <button type="button" class="pass-toggle" onclick="togglePass('nc-pass', this)" aria-label="Mostrar contraseña">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -750,6 +827,37 @@ footer.note{
         <h2>Consultorios registrados</h2>
         <p class="sub">Cada uno queda atado al primer PC donde se use. Si cambias de equipo, libera el dispositivo aquí.</p>
         <div id="administrador-consultorios-list"></div>
+      </div>
+
+      <div class="card">
+        <h2>Crear nuevo domiciliario</h2>
+        <p class="sub">Asigna una zona fija a cada domiciliario. Solo verá pedidos de esa zona.</p>
+        <label>Nombre del domiciliario</label>
+        <input type="text" id="nd-nombre" placeholder="Ej. Andrés Ramírez">
+        <label>Correo de la cuenta</label>
+        <input type="email" id="nd-email" placeholder="Ej. andres.domicilios@farmaruta.com">
+        <label>Contraseña</label>
+        <div class="pass-field">
+          <input type="password" id="nd-pass" placeholder="Mínimo 6 caracteres">
+          <button type="button" class="pass-toggle" onclick="togglePass('nd-pass', this)" aria-label="Mostrar contraseña">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+            </svg>
+          </button>
+        </div>
+        <label>Zona asignada</label>
+        <select id="nd-zona"></select>
+        <div class="login-error" id="nd-error"></div>
+        <div style="margin-top:16px;">
+          <button class="btn btn-primary" style="width:100%;" onclick="crearDomiciliario()">Crear domiciliario</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Domiciliarios registrados</h2>
+        <div id="administrador-domiciliarios-list"></div>
       </div>
 
       <div class="card">
@@ -805,15 +913,21 @@ const auth = firebase.auth();
 const pedidosRef = db.collection('pedidos');
 const rolesRef = db.collection('roles');
 const pacientesRef = db.collection('pacientes');
+const zonasRef = db.collection('zonas');
+const domiciliariosRef = db.collection('domiciliarios');
 let confirmationResult = null;
 let pacienteCedula = null;
 let pacienteDireccion = null;
-let rolActual = { farmacia: null, eps: null, medico: null };
+let rolActual = { farmacia: null, eps: null, medico: null, domiciliario: null };
+let domiciliarioZona = null;
+let zonasCache = [];
 
-// ---------- Sesión de STAFF (médico / farmacia / eps) ----------
+const ROLES_STAFF = ['farmacia','eps','medico','administrador','domiciliario'];
+
+// ---------- Sesión de STAFF (médico / farmacia / eps / domiciliario / admin) ----------
 auth.onAuthStateChanged((user) => {
   if(!user){
-    ['farmacia','eps','medico','administrador'].forEach(r=>{
+    ROLES_STAFF.forEach(r=>{
       document.getElementById(r+'-login').style.display = 'block';
       document.getElementById(r+'-content').style.display = 'none';
       rolActual[r] = null;
@@ -822,7 +936,7 @@ auth.onAuthStateChanged((user) => {
     return;
   }
 rolesRef.doc(user.uid).get().then(async (doc) => {
-    if(doc.exists && (doc.data().role === 'farmacia' || doc.data().role === 'eps' || doc.data().role === 'medico' || doc.data().role === 'administrador')){
+    if(doc.exists && ROLES_STAFF.includes(doc.data().role)){
       const rol = doc.data().role;
 
       if(rol === 'medico'){
@@ -836,6 +950,12 @@ rolesRef.doc(user.uid).get().then(async (doc) => {
         }
       }
 
+      if(rol === 'domiciliario'){
+        domiciliarioZona = doc.data().zona || null;
+        const label = document.getElementById('domiciliario-zona-label');
+        if(label) label.textContent = domiciliarioZona || 'Sin zona asignada';
+      }
+
     document.getElementById(rol + '-login').style.display = 'none';
       document.getElementById(rol + '-content').style.display = 'block';
       document.getElementById(rol + '-email-label').textContent = user.email;
@@ -846,8 +966,10 @@ rolesRef.doc(user.uid).get().then(async (doc) => {
       if(rol === 'medico'){
         mostrarTurnoActivo();
       }
-if(rol === 'administrador'){
+      if(rol === 'administrador'){
         cargarConsultorios();
+        cargarZonas();
+        cargarDomiciliarios();
       }
     }
   });
@@ -881,8 +1003,6 @@ function loginRol(rol){
 }
 
 // ---------- Administrador: crear consultorios ----------
-// FIX #2: try/finally para asegurar que secondaryApp siempre se borre,
-// incluso si createUserWithEmailAndPassword falla (ej. correo duplicado).
 async function crearConsultorio(){
   const nombreConsultorio = document.getElementById('nc-nombre').value.trim();
   const email = document.getElementById('nc-email').value.trim();
@@ -903,7 +1023,6 @@ async function crearConsultorio(){
 
   let secondaryApp = null;
   try {
-    // Instancia secundaria: crea el usuario nuevo sin cerrar la sesión del administrador
     secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary');
     try {
       const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, pass);
@@ -918,9 +1037,6 @@ async function crearConsultorio(){
         creadoPor: auth.currentUser.uid
       });
     } finally {
-      // Se ejecuta siempre, haya fallado o no la creación,
-      // para que la próxima llamada a crearConsultorio() no choque
-      // con una instancia 'Secondary' ya existente.
       await secondaryApp.delete();
     }
 
@@ -970,14 +1086,15 @@ async function liberarDispositivo(uid){
   alert('Dispositivo liberado.');
   cargarConsultorios();
 }
- function togglePass(id, btn){
-   const input = document.getElementById(id);
-   const slash = btn.querySelector('.slash');
-   const mostrando = input.type === 'text';
-   input.type = mostrando ? 'password' : 'text';
-   slash.style.display = mostrando ? 'none' : 'block';
-    btn.setAttribute('aria-label', mostrando ? 'Mostrar contraseña' : 'Ocultar contraseña');
-  }
+
+function togglePass(id, btn){
+  const input = document.getElementById(id);
+  const slash = btn.querySelector('.slash');
+  const mostrando = input.type === 'text';
+  input.type = mostrando ? 'password' : 'text';
+  slash.style.display = mostrando ? 'none' : 'block';
+  btn.setAttribute('aria-label', mostrando ? 'Mostrar contraseña' : 'Ocultar contraseña');
+}
 
 function logout(rol){
   auth.signOut();
@@ -1005,6 +1122,236 @@ async function verificarDispositivoAutorizado(user){
 
   return snap.data().deviceId === deviceId;
 }
+
+// =========================================================
+// ZONAS: geocodificación gratuita (Nominatim/OpenStreetMap)
+// =========================================================
+
+const ZONAS_EJEMPLO = [
+  { nombre: 'Suba', lat: 4.7420, lng: -74.0930 },
+  { nombre: 'Usaquén', lat: 4.6950, lng: -74.0310 },
+  { nombre: 'Chapinero', lat: 4.6520, lng: -74.0620 },
+  { nombre: 'Engativá', lat: 4.7080, lng: -74.1120 },
+  { nombre: 'Kennedy', lat: 4.6280, lng: -74.1560 },
+  { nombre: 'Bosa', lat: 4.6180, lng: -74.1770 },
+  { nombre: 'Fontibón', lat: 4.6720, lng: -74.1450 },
+  { nombre: 'Ciudad Bolívar', lat: 4.5750, lng: -74.1500 },
+  { nombre: 'Teusaquillo', lat: 4.6390, lng: -74.0930 },
+  { nombre: 'Puente Aranda', lat: 4.6190, lng: -74.1150 }
+];
+
+async function cargarZonasEjemplo(){
+  if(!confirm('¿Cargar las 10 zonas de ejemplo de Bogotá? Puedes editarlas o borrarlas después.')) return;
+  try {
+    await Promise.all(ZONAS_EJEMPLO.map(z => zonasRef.add({
+      nombre: z.nombre,
+      lat: z.lat,
+      lng: z.lng,
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+    })));
+    alert('Zonas de ejemplo cargadas.');
+    cargarZonas();
+  } catch(err){
+    console.error(err);
+    alert('No se pudieron cargar las zonas: ' + err.message);
+  }
+}
+
+async function crearZona(){
+  const nombre = document.getElementById('zona-nombre').value.trim();
+  const lat = parseFloat(document.getElementById('zona-lat').value);
+  const lng = parseFloat(document.getElementById('zona-lng').value);
+  const errorBox = document.getElementById('zona-error');
+  errorBox.classList.remove('show');
+
+  if(!nombre || isNaN(lat) || isNaN(lng)){
+    errorBox.textContent = 'Completa nombre, latitud y longitud (numéricas).';
+    errorBox.classList.add('show');
+    return;
+  }
+
+  try {
+    await zonasRef.add({
+      nombre, lat, lng,
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    document.getElementById('zona-nombre').value = '';
+    document.getElementById('zona-lat').value = '';
+    document.getElementById('zona-lng').value = '';
+    cargarZonas();
+  } catch(err){
+    console.error(err);
+    errorBox.textContent = 'Error: ' + err.message;
+    errorBox.classList.add('show');
+  }
+}
+
+async function borrarZona(id){
+  if(!confirm('¿Eliminar esta zona? Los domiciliarios que la tengan asignada quedarán sin zona.')) return;
+  await zonasRef.doc(id).delete();
+  cargarZonas();
+}
+
+async function cargarZonas(){
+  const lista = document.getElementById('administrador-zonas-list');
+  const snap = await zonasRef.orderBy('nombre').get();
+  zonasCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  if(zonasCache.length === 0){
+    if(lista) lista.innerHTML = '<div class="empty-state">Aún no has definido zonas. Usa el botón de arriba para cargar las 10 de ejemplo.</div>';
+  } else if(lista){
+    lista.innerHTML = zonasCache.map(z => `
+      <div class="order-row">
+        <div class="order-info">
+          <div class="name">${z.nombre}</div>
+          <div class="meta">lat: ${z.lat}, lng: ${z.lng}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="borrarZona('${z.id}')">Eliminar</button>
+      </div>
+    `).join('');
+  }
+
+  actualizarSelectZonas();
+}
+
+function actualizarSelectZonas(){
+  const select = document.getElementById('nd-zona');
+  if(!select) return;
+  if(zonasCache.length === 0){
+    select.innerHTML = '<option value="">No hay zonas creadas todavía</option>';
+    return;
+  }
+  select.innerHTML = zonasCache.map(z => `<option value="${z.nombre}">${z.nombre}</option>`).join('');
+}
+
+// Distancia en km entre dos coordenadas (fórmula de Haversine)
+function distanciaKm(lat1, lng1, lat2, lng2){
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// Geocodifica una dirección de texto usando Nominatim (OpenStreetMap), gratuito, sin API key.
+async function geocodificarDireccion(direccion){
+  try {
+    const query = encodeURIComponent(direccion + ', Bogotá, Colombia');
+    const url = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=co`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+    if(!res.ok) return null;
+    const data = await res.json();
+    if(!data || data.length === 0) return null;
+    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  } catch(err){
+    console.error('Error geocodificando dirección:', err);
+    return null;
+  }
+}
+
+// Encuentra la zona registrada más cercana a unas coordenadas dadas.
+function zonaMasCercana(lat, lng){
+  if(zonasCache.length === 0) return null;
+  let mejor = null;
+  let menorDistancia = Infinity;
+  zonasCache.forEach(z => {
+    const d = distanciaKm(lat, lng, z.lat, z.lng);
+    if(d < menorDistancia){
+      menorDistancia = d;
+      mejor = z.nombre;
+    }
+  });
+  return mejor;
+}
+
+// Determina la zona de una dirección de texto: geocodifica y busca la zona más cercana.
+async function determinarZona(direccion){
+  if(zonasCache.length === 0){
+    await cargarZonas();
+  }
+  const coords = await geocodificarDireccion(direccion);
+  if(!coords) return { zona: null, lat: null, lng: null };
+  const zona = zonaMasCercana(coords.lat, coords.lng);
+  return { zona, lat: coords.lat, lng: coords.lng };
+}
+
+// ---------- Administrador: crear domiciliarios ----------
+async function crearDomiciliario(){
+  const nombre = document.getElementById('nd-nombre').value.trim();
+  const email = document.getElementById('nd-email').value.trim();
+  const pass = document.getElementById('nd-pass').value;
+  const zona = document.getElementById('nd-zona').value;
+  const errorBox = document.getElementById('nd-error');
+  errorBox.classList.remove('show');
+
+  if(!nombre || !email || !pass || !zona){
+    errorBox.textContent = 'Completa todos los campos, incluida la zona.';
+    errorBox.classList.add('show');
+    return;
+  }
+  if(pass.length < 6){
+    errorBox.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    errorBox.classList.add('show');
+    return;
+  }
+
+  let secondaryApp = null;
+  try {
+    secondaryApp = firebase.initializeApp(firebaseConfig, 'SecondaryDom');
+    try {
+      const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, pass);
+      const nuevoUid = cred.user.uid;
+      await secondaryApp.auth().signOut();
+
+      await rolesRef.doc(nuevoUid).set({ role: 'domiciliario', zona });
+      await domiciliariosRef.doc(nuevoUid).set({
+        nombre, email, zona,
+        creado: firebase.firestore.FieldValue.serverTimestamp(),
+        creadoPor: auth.currentUser.uid
+      });
+    } finally {
+      await secondaryApp.delete();
+    }
+
+    document.getElementById('nd-nombre').value = '';
+    document.getElementById('nd-email').value = '';
+    document.getElementById('nd-pass').value = '';
+    alert('Domiciliario creado correctamente.');
+    cargarDomiciliarios();
+
+  } catch(err){
+    console.error(err);
+    errorBox.textContent = 'Error: ' + err.message;
+    errorBox.classList.add('show');
+  }
+}
+
+async function cargarDomiciliarios(){
+  const lista = document.getElementById('administrador-domiciliarios-list');
+  if(!lista) return;
+  const snap = await domiciliariosRef.orderBy('creado','desc').get();
+
+  if(snap.empty){
+    lista.innerHTML = '<div class="empty-state">Aún no has creado ningún domiciliario.</div>';
+    return;
+  }
+
+  lista.innerHTML = snap.docs.map(doc => {
+    const d = doc.data();
+    return `
+      <div class="order-row">
+        <div class="order-info">
+          <div class="name">${d.nombre}</div>
+          <div class="meta">${d.email} · Zona: ${d.zona}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 const STEPS = [
   {key:'pendiente', label:'Solicitud enviada'},
   {key:'autorizado', label:'Autorizado por EPS'},
@@ -1027,6 +1374,7 @@ function iniciarEscuchaStaff(){
     renderFarmacia();
     renderEPS();
     renderMedico();
+    renderDomiciliario();
   }, (err) => {
     console.error('Error de conexión con Firestore:', err);
     document.getElementById('connStatus').textContent =
@@ -1117,7 +1465,9 @@ function mostrarTurnoActivo(){
 }
 
 // ---------- Médico: crear fórmula ----------
-function crearPedidoMedico(){
+// La zona se determina automáticamente a partir de la dirección, sin que el médico
+// tenga que elegir nada: se geocodifica con Nominatim y se asigna la zona más cercana.
+async function crearPedidoMedico(){
   const nombre = document.getElementById('m-nombre').value.trim();
   const doc = document.getElementById('m-doc').value.trim();
   const eps = document.getElementById('m-eps').value;
@@ -1139,10 +1489,20 @@ function crearPedidoMedico(){
     return;
   }
 
+  const btn = document.getElementById('btn-crear-pedido');
+  const preview = document.getElementById('m-zona-preview');
+  btn.disabled = true;
+  btn.textContent = 'Ubicando dirección...';
+  if(preview) preview.textContent = '';
+
+  const { zona, lat, lng } = await determinarZona(dir);
+
   const codigo = 'MR-' + Math.floor(1000 + Math.random()*9000);
 
   pedidosRef.add({
     nombre, doc, eps, med, prescripcion, dir, tel, codigo,
+    zona: zona || null,
+    zonaLat: lat, zonaLng: lng,
     status: 'pendiente',
     medicoId: auth.currentUser.uid,
     medicoEmail: auth.currentUser.email,
@@ -1151,10 +1511,18 @@ function crearPedidoMedico(){
     creado: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
     ['m-nombre','m-doc','m-med','m-prescripcion','m-dir','m-tel'].forEach(id=>document.getElementById(id).value='');
-    alert('Fórmula generada y enviada a la EPS.');
+    if(zona){
+      alert('Fórmula generada y enviada a la EPS. Zona detectada: ' + zona);
+    } else {
+      alert('Fórmula generada y enviada a la EPS. No se pudo detectar la zona automáticamente; el administrador puede asignarla manualmente.');
+    }
   }).catch(err=>{
     console.error(err);
     alert('No se pudo generar la fórmula: ' + err.message);
+  }).finally(() => {
+    btn.disabled = false;
+    btn.textContent = 'Generar fórmula y enviar a EPS';
+    if(preview) preview.textContent = '';
   });
 }
 
@@ -1229,10 +1597,6 @@ async function confirmarRegistroPaciente(){
   await buscarPedidoPaciente();
 }
 
-// FIX #1: ahora sí se asigna pedidoActivoPaciente y se persiste en
-// localStorage cuando se encuentra un pedido, y se limpia cuando no hay ninguno.
-// Antes esta variable nunca se escribía, así que renderPaciente() siempre
-// mostraba "Aún no tienes pedidos" aunque sí existiera un pedido.
 async function buscarPedidoPaciente(){
   const q = await pedidosRef.where('doc','==',pacienteCedula).orderBy('creado','desc').limit(1).get();
   if (!q.empty) {
@@ -1279,7 +1643,7 @@ async function buscarFormulas(){
       filas = filas.filter(p => p.creado && p.creado.toMillis() >= desdeTs);
     }
     if(hasta){
-      const hastaTs = new Date(hasta).getTime() + 86400000; // incluye todo el día "hasta"
+      const hastaTs = new Date(hasta).getTime() + 86400000;
       filas = filas.filter(p => p.creado && p.creado.toMillis() <= hastaTs);
     }
 
@@ -1293,7 +1657,7 @@ async function buscarFormulas(){
         <div class="order-info">
           <div class="name">${p.nombre} (${p.doc}) — ${p.med}</div>
           <div class="meta">Firmado por: ${p.medicoNombre || '—'} · RETHUS: ${p.medicoRethus || '—'}</div>
-          <div class="meta">${p.creado ? new Date(p.creado.toMillis()).toLocaleString('es-CO') : ''} · ${p.codigo}</div>
+          <div class="meta">${p.creado ? new Date(p.creado.toMillis()).toLocaleString('es-CO') : ''} · ${p.codigo} · Zona: ${p.zona || 'Sin definir'}</div>
         </div>
         <span class="tag ${tagClass(p.status)}">${tagLabel(p.status)}</span>
       </div>
@@ -1305,9 +1669,6 @@ async function buscarFormulas(){
   }
 }
 
-// FIX #1 (complemento): limpiar localStorage al cerrar sesión del paciente,
-// para que el próximo paciente que use el mismo dispositivo/navegador
-// no herede el pedido de otra persona.
 function logoutPaciente(){
   detenerEscuchaPaciente();
   pedidoActivoPaciente = null;
@@ -1344,8 +1705,25 @@ function despachar(id){
   pedidosRef.doc(id).update({ status: 'transito' });
 }
 
-function entregar(id){
-  pedidosRef.doc(id).update({ status: 'entregado' });
+// El domiciliario toma un pedido disponible en su zona.
+async function tomarPedido(id){
+  const user = auth.currentUser;
+  if(!user) return;
+  const domSnap = await domiciliariosRef.doc(user.uid).get();
+  const nombreDom = domSnap.exists ? domSnap.data().nombre : user.email;
+  await pedidosRef.doc(id).update({
+    domiciliarioId: user.uid,
+    domiciliarioNombre: nombreDom,
+    tomadoEn: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+// El domiciliario marca la entrega como completada.
+function entregarDomiciliario(id){
+  pedidosRef.doc(id).update({
+    status: 'entregado',
+    entregadoEn: firebase.firestore.FieldValue.serverTimestamp()
+  });
 }
 
 function statusIndex(status){
@@ -1364,6 +1742,7 @@ function renderAll(){
   renderMedico();
   renderFarmacia();
   renderEPS();
+  renderDomiciliario();
 }
 
 function renderPaciente(){
@@ -1404,13 +1783,19 @@ function renderPaciente(){
     </div>`;
   }).join('');
 
-  const messages = {
-    pendiente: 'Tu solicitud fue enviada a tu EPS. Estamos esperando autorización.',
-    autorizado: 'Tu EPS autorizó el medicamento. Una farmacia de la red lo va a despachar.',
-    transito: 'Tu medicamento va en camino a tu dirección.',
-    entregado: '¡Entregado! Gracias por usar FarmaRuta.'
-  };
-  document.getElementById('p-status-text').textContent = messages[ped.status];
+  let mensaje;
+  if(ped.status === 'transito' && ped.domiciliarioNombre){
+    mensaje = 'Tu medicamento va en camino con ' + ped.domiciliarioNombre + '.';
+  } else {
+    const messages = {
+      pendiente: 'Tu solicitud fue enviada a tu EPS. Estamos esperando autorización.',
+      autorizado: 'Tu EPS autorizó el medicamento. Una farmacia de la red lo va a despachar.',
+      transito: 'Tu medicamento va en camino a tu dirección.',
+      entregado: '¡Entregado! Gracias por usar FarmaRuta.'
+    };
+    mensaje = messages[ped.status];
+  }
+  document.getElementById('p-status-text').textContent = mensaje;
 }
 
 function renderMedico(){
@@ -1426,32 +1811,101 @@ function renderMedico(){
     <div class="order-row">
       <div class="order-info">
         <div class="name">${p.nombre} (${p.doc}) — ${p.med}</div>
-        <div class="meta">${p.eps} · ${p.codigo}</div>
+        <div class="meta">${p.eps} · ${p.codigo} ${p.zona ? '· Zona: ' + p.zona : ''}</div>
       </div>
       <span class="tag ${tagClass(p.status)}">${tagLabel(p.status)}</span>
     </div>
   `).join('');
 }
 
+// Farmacia ve sus pedidos autorizados agrupados por zona, para prepararlos con anticipación.
 function renderFarmacia(){
   const list = document.getElementById('farmacia-list');
+  if(!list) return;
   const visibles = pedidos.filter(p => p.status==='autorizado' || p.status==='transito' || p.status==='entregado');
   if(visibles.length===0){
     list.innerHTML = '<div class="empty-state">Aún no hay pedidos autorizados por una EPS.</div>';
     return;
   }
-  list.innerHTML = visibles.map(p=>`
-    <div class="order-row">
-      <div class="order-info">
-        <div class="name">${p.nombre} — ${p.med}</div>
-        <div class="meta">${p.dir} · ${p.codigo}</div>
-        ${p.prescripcion ? `<div class="meta" style="margin-top:4px;"><strong>Indicaciones:</strong> ${p.prescripcion}</div>` : ''}
+
+  const grupos = {};
+  visibles.forEach(p => {
+    const z = p.zona || 'Sin zona definida';
+    if(!grupos[z]) grupos[z] = [];
+    grupos[z].push(p);
+  });
+
+  const zonasOrdenadas = Object.keys(grupos).sort();
+
+  list.innerHTML = zonasOrdenadas.map(zona => {
+    const filas = grupos[zona].map(p => `
+      <div class="order-row">
+        <div class="order-info">
+          <div class="name">${p.nombre} — ${p.med}</div>
+          <div class="meta">${p.dir} · ${p.codigo}</div>
+          ${p.prescripcion ? `<div class="meta" style="margin-top:4px;"><strong>Indicaciones:</strong> ${p.prescripcion}</div>` : ''}
+        </div>
+        <span class="tag ${tagClass(p.status)}">${tagLabel(p.status)}</span>
+        ${p.status==='autorizado' ? `<button class="btn btn-accent" onclick="despachar('${p.id}')">Alistar para domiciliario</button>` : ''}
       </div>
-      <span class="tag ${tagClass(p.status)}">${tagLabel(p.status)}</span>
-      ${p.status==='autorizado' ? `<button class="btn btn-accent" onclick="despachar('${p.id}')">Despachar</button>` : ''}
-      ${p.status==='transito' ? `<button class="btn btn-primary" onclick="entregar('${p.id}')">Marcar entregado</button>` : ''}
-    </div>
-  `).join('');
+    `).join('');
+    return `<div class="zone-heading">${zona}</div>${filas}`;
+  }).join('');
+}
+
+// El domiciliario ve solo los pedidos disponibles de su propia zona, y sus entregas en curso.
+function renderDomiciliario(){
+  const disponiblesList = document.getElementById('domiciliario-disponibles-list');
+  const cursoList = document.getElementById('domiciliario-curso-list');
+  if(!disponiblesList || !cursoList || !auth.currentUser) return;
+
+  const disponibles = pedidos.filter(p =>
+    p.status === 'transito' && !p.domiciliarioId && p.zona === domiciliarioZona
+  );
+  const enCurso = pedidos.filter(p =>
+    p.status === 'transito' && p.domiciliarioId === auth.currentUser.uid
+  );
+  const hoy = new Date();
+  hoy.setHours(0,0,0,0);
+  const entregadosHoy = pedidos.filter(p =>
+    p.status === 'entregado' && p.domiciliarioId === auth.currentUser.uid &&
+    p.entregadoEn && p.entregadoEn.toDate() >= hoy
+  );
+
+  const kpiDisp = document.getElementById('kpi-domiciliario-disponibles');
+  const kpiCurso = document.getElementById('kpi-domiciliario-curso');
+  const kpiHoy = document.getElementById('kpi-domiciliario-hoy');
+  if(kpiDisp) kpiDisp.textContent = disponibles.length;
+  if(kpiCurso) kpiCurso.textContent = enCurso.length;
+  if(kpiHoy) kpiHoy.textContent = entregadosHoy.length;
+
+  if(disponibles.length === 0){
+    disponiblesList.innerHTML = '<div class="empty-state">No hay pedidos disponibles en tu zona en este momento.</div>';
+  } else {
+    disponiblesList.innerHTML = disponibles.map(p => `
+      <div class="order-row">
+        <div class="order-info">
+          <div class="name">${p.nombre} — ${p.med}</div>
+          <div class="meta">${p.dir} · ${p.codigo} · Tel: ${p.tel}</div>
+        </div>
+        <button class="btn btn-accent" onclick="tomarPedido('${p.id}')">Tomar pedido</button>
+      </div>
+    `).join('');
+  }
+
+  if(enCurso.length === 0){
+    cursoList.innerHTML = '<div class="empty-state">No tienes entregas en curso.</div>';
+  } else {
+    cursoList.innerHTML = enCurso.map(p => `
+      <div class="order-row">
+        <div class="order-info">
+          <div class="name">${p.nombre} — ${p.med}</div>
+          <div class="meta">${p.dir} · ${p.codigo} · Tel: ${p.tel}</div>
+        </div>
+        <button class="btn btn-primary" onclick="entregarDomiciliario('${p.id}')">Marcar entregado</button>
+      </div>
+    `).join('');
+  }
 }
 
 function renderEPS(){
@@ -1476,9 +1930,10 @@ function renderEPS(){
     </div>
   `).join('');
 }
+
 // Mostrar pestañas de staff solo con acceso especial (?staff=1 en la URL)
 if (new URLSearchParams(window.location.search).get('staff') === '1') {
- document.querySelectorAll('.staff-tab').forEach(el => el.classList.remove('staff-tab'));
+  document.querySelectorAll('.staff-tab').forEach(el => el.classList.remove('staff-tab'));
 }
 renderAll();
 
@@ -1520,6 +1975,7 @@ if (isIOS && !isStandalone) {
   installText.textContent = 'Toca el ícono compartir (□↑) y luego "Agregar a pantalla de inicio".';
   setTimeout(()=>banner.classList.add('show'), 1200);
 }
+
 </script>
 </body>
 </html>
