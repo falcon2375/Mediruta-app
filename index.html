@@ -400,6 +400,38 @@ footer.note{
   font-size:0.8rem;
   cursor:pointer;
 }
+ 394  .session-bar button{
+395    background:transparent;
+396    border:none;
+397    color:var(--alert);
+398    font-family:var(--font-body);
+399    font-weight:600;
+400    font-size:0.8rem;
+401    cursor:pointer;
+402  }
+403
+404  .pass-field{
+405    position:relative;
+406  }
+407  .pass-field input{
+408    padding-right:42px;
+409  }
+410  .pass-toggle{
+411    position:absolute;
+412    right:8px;
+413    top:50%;
+414    transform:translateY(-50%);
+415    background:none;
+416    border:none;
+417    cursor:pointer;
+418    padding:6px;
+419    color:var(--muted);
+420    display:flex;
+421    align-items:center;
+422    justify-content:center;
+423  }
+424  .pass-toggle:hover{color:var(--ink);}
+425  .pass-toggle svg{width:18px;height:18px;} 
 </style>
 </head>
 <body>
@@ -485,7 +517,16 @@ footer.note{
         <label>Correo</label>
         <input type="email" id="medico-email" placeholder="medico@ejemplo.com">
         <label>Contraseña</label>
-        <input type="password" id="medico-pass" placeholder="••••••••">
+      <div class="pass-field">
+          <input type="password" id="medico-pass" placeholder="••••••••">
+          <button type="button" class="pass-toggle" onclick="togglePass('medico-pass', this)" aria-label="Mostrar contraseña">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+            </svg>
+          </button>
+        </div>
         <div class="login-error" id="medico-login-error">Correo o contraseña incorrectos, o esta cuenta no tiene acceso de médico.</div>
         <div style="margin-top:18px;">
           <button class="btn btn-primary" style="width:100%;" onclick="loginRol('medico')">Ingresar</button>
@@ -571,7 +612,16 @@ footer.note{
         <label>Correo</label>
         <input type="email" id="farmacia-email" placeholder="farmacia@ejemplo.com">
         <label>Contraseña</label>
-        <input type="password" id="farmacia-pass" placeholder="••••••••">
+        <div class="pass-field">
+          <input type="password" id="farmacia-pass" placeholder="••••••••">
+          <button type="button" class="pass-toggle" onclick="togglePass('farmacia-pass', this)" aria-label="Mostrar contraseña">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+            </svg>
+          </button>
+        </div>
         <div class="login-error" id="farmacia-login-error">Correo o contraseña incorrectos, o esta cuenta no tiene acceso de farmacia.</div>
         <div style="margin-top:18px;">
           <button class="btn btn-primary" style="width:100%;" onclick="loginRol('farmacia')">Ingresar</button>
@@ -602,7 +652,17 @@ footer.note{
         <label>Correo</label>
         <input type="email" id="eps-email" placeholder="eps@ejemplo.com">
         <label>Contraseña</label>
-        <input type="password" id="eps-pass" placeholder="••••••••">
+        <div class="pass-field">
+          <input type="password" id="eps-pass" placeholder="••••••••">
+          <button type="button" class="pass-toggle" onclick="togglePass('eps-pass', this)" aria-label="Mostrar contraseña">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+            </svg>
+          </button>
+        </div>
+         
         <div class="login-error" id="eps-login-error">Correo o contraseña incorrectos, o esta cuenta no tiene acceso de EPS.</div>
         <div style="margin-top:18px;">
           <button class="btn btn-primary" style="width:100%;" onclick="loginRol('eps')">Ingresar</button>
@@ -639,7 +699,16 @@ footer.note{
         <label>Correo</label>
         <input type="email" id="administrador-email" placeholder="admin@ejemplo.com">
         <label>Contraseña</label>
-        <input type="password" id="administrador-pass" placeholder="••••••••">
+      <div class="pass-field">
+          <input type="password" id="administrador-pass" placeholder="••••••••">
+          <button type="button" class="pass-toggle" onclick="togglePass('administrador-pass', this)" aria-label="Mostrar contraseña">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+            </svg>
+          </button>
+        </div>
         <div class="login-error" id="administrador-login-error">Correo o contraseña incorrectos, o esta cuenta no tiene acceso de administrador.</div>
         <div style="margin-top:18px;">
           <button class="btn btn-primary" style="width:100%;" onclick="loginRol('administrador')">Ingresar</button>
@@ -661,7 +730,16 @@ footer.note{
         <label>Correo de la cuenta</label>
         <input type="email" id="nc-email" placeholder="Ej. consultorio3@clinica.com">
         <label>Contraseña</label>
-        <input type="password" id="nc-pass" placeholder="Mínimo 6 caracteres">
+       <div class="pass-field">
+          <input type="password" id="nc-pass" placeholder="Mínimo 6 caracteres">
+          <button type="button" class="pass-toggle" onclick="togglePass('nc-pass', this)" aria-label="Mostrar contraseña">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+            </svg>
+          </button>
+        </div>
         <div class="login-error" id="nc-error"></div>
         <div style="margin-top:16px;">
           <button class="btn btn-primary" style="width:100%;" onclick="crearConsultorio()">Crear consultorio</button>
@@ -892,6 +970,18 @@ async function liberarDispositivo(uid){
   alert('Dispositivo liberado.');
   cargarConsultorios();
 }
+924    cargarConsultorios();
+925  }
+926
+927  function togglePass(id, btn){
+928    const input = document.getElementById(id);
+929    const slash = btn.querySelector('.slash');
+930    const mostrando = input.type === 'text';
+931    input.type = mostrando ? 'password' : 'text';
+932    slash.style.display = mostrando ? 'none' : 'block';
+933    btn.setAttribute('aria-label', mostrando ? 'Mostrar contraseña' : 'Ocultar contraseña');
+934  }
+935
 function logout(rol){
   auth.signOut();
 }
@@ -902,6 +992,7 @@ function getDeviceId(){
     localStorage.setItem('fr_device_id', id);
   }
   return id;
+}
 }
 
 async function verificarDispositivoAutorizado(user){
