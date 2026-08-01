@@ -990,8 +990,6 @@ function getDeviceId(){
   }
   return id;
 }
-}
-
 async function verificarDispositivoAutorizado(user){
   const deviceId = getDeviceId();
   const lockRef = db.collection('device_locks').doc(user.uid);
