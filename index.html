@@ -970,15 +970,15 @@ async function liberarDispositivo(uid){
   alert('Dispositivo liberado.');
   cargarConsultorios();
 }
-927  function togglePass(id, btn){
-928    const input = document.getElementById(id);
-929    const slash = btn.querySelector('.slash');
-930    const mostrando = input.type === 'text';
-931    input.type = mostrando ? 'password' : 'text';
-932    slash.style.display = mostrando ? 'none' : 'block';
-933    btn.setAttribute('aria-label', mostrando ? 'Mostrar contraseña' : 'Ocultar contraseña');
-934  }
-935
+ function togglePass(id, btn){
+   const input = document.getElementById(id);
+   const slash = btn.querySelector('.slash');
+   const mostrando = input.type === 'text';
+   input.type = mostrando ? 'password' : 'text';
+   slash.style.display = mostrando ? 'none' : 'block';
+    btn.setAttribute('aria-label', mostrando ? 'Mostrar contraseña' : 'Ocultar contraseña');
+  }
+
 function logout(rol){
   auth.signOut();
 }
