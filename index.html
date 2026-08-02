@@ -131,7 +131,7 @@ body{
   font-size:0.85rem;
   margin:0 0 18px;
 }
-
+#p-track-med{white-space:pre-line;}
 label{
   display:block;
   font-size:0.78rem;
@@ -285,7 +285,7 @@ input:focus,select:focus,textarea:focus{
   flex-wrap:wrap;
 }
 .order-row:last-child{border-bottom:none;}
-.order-info .name{font-weight:600;font-size:0.92rem;}
+.order-info .name{font-weight:600;font-size:0.92rem;white-space:pre-line;}
 .order-info .meta{font-size:0.78rem;color:var(--muted);margin-top:2px;}
 .tag{
   font-family:var(--font-mono);
@@ -584,8 +584,8 @@ footer.note{
         </select>
 
         <label>Medicamento formulado</label>
-        <input id="m-med" placeholder="Ej. Losartán 50mg x 30 tabletas">
-
+        <textarea id="m-med" rows="3" placeholder="Ej. Losartán 50mg x 30 tabletas
+Ibuprofeno 400mg x 10 tabletas"></textarea>
         <label>Prescripción (dosis, frecuencia, duración, indicaciones)</label>
         <textarea id="m-prescripcion" rows="3" placeholder="Ej. Tomar 1 tableta cada 24 horas, vía oral, por 30 días. Tomar con alimentos."></textarea>
 
