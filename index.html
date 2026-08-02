@@ -1143,13 +1143,22 @@ const ZONAS_EJEMPLO = [
 async function cargarZonasEjemplo(){
   if(!confirm('¿Cargar las 10 zonas de ejemplo de Bogotá? Puedes editarlas o borrarlas después.')) return;
   try {
-    await Promise.all(ZONAS_EJEMPLO.map(z => zonasRef.add({
+    const snap = await zonasRef.get();
+    const nombresExistentes = new Set(snap.docs.map(d => d.data().nombre));
+    const faltantes = ZONAS_EJEMPLO.filter(z => !nombresExistentes.has(z.nombre));
+
+    if(faltantes.length === 0){
+      alert('Las 10 zonas de ejemplo ya están cargadas, no se agregó nada nuevo.');
+      return;
+    }
+
+    await Promise.all(faltantes.map(z => zonasRef.add({
       nombre: z.nombre,
       lat: z.lat,
       lng: z.lng,
       creado: firebase.firestore.FieldValue.serverTimestamp()
     })));
-    alert('Zonas de ejemplo cargadas.');
+    alert(faltantes.length + ' zona(s) nueva(s) cargada(s).');
     cargarZonas();
   } catch(err){
     console.error(err);
