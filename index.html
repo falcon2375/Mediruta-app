@@ -653,7 +653,7 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
     <div class="login-gate" id="domiciliario-login">
       <div class="card">
         <h2>Acceso domiciliario</h2>
-        <p class="sub">Ingresa con la cuenta que te asignó el administrador.</p>
+        <p class="sub">Ingresa con tu cuenta de domiciliario.</p>
         <label>Correo</label>
         <input type="email" id="domiciliario-email" placeholder="domiciliario@ejemplo.com">
         <label>Contraseña</label>
@@ -671,7 +671,66 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
         <div style="margin-top:18px;">
           <button class="btn btn-primary" style="width:100%;" onclick="loginRol('domiciliario')">Ingresar</button>
         </div>
+        <p class="sub" style="margin-top:16px;text-align:center;">
+          ¿Aún no tienes cuenta? <a href="#" onclick="mostrarRegistroDomiciliario();return false;" style="color:var(--accent);font-weight:600;">Regístrate aquí</a>
+        </p>
       </div>
+    </div>
+
+    <div class="card" id="domiciliario-registro" style="display:none;max-width:480px;margin:0 auto;">
+      <h2>Registro de domiciliario</h2>
+      <p class="sub">Completa tus datos. Tu cuenta quedará pendiente de aprobación hasta que el administrador la active.</p>
+
+      <label>Correo</label>
+      <input type="email" id="rd-email" placeholder="tucorreo@ejemplo.com">
+      <label>Contraseña</label>
+      <div class="pass-field">
+        <input type="password" id="rd-pass" placeholder="Mínimo 6 caracteres">
+        <button type="button" class="pass-toggle" onclick="togglePass('rd-pass', this)" aria-label="Mostrar contraseña">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+            <circle cx="12" cy="12" r="3"/>
+            <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+          </svg>
+        </button>
+      </div>
+      <label>Nombre completo</label>
+      <input type="text" id="rd-nombre" placeholder="Ej. Andrés Ramírez">
+      <label>Número de cédula</label>
+      <input type="text" id="rd-cedula" placeholder="Ej. 1032456789">
+      <label>Teléfono</label>
+      <input type="text" id="rd-telefono" placeholder="Ej. 300 000 0000">
+      <label>Dirección de residencia</label>
+      <input type="text" id="rd-direccion" placeholder="Ej. Cra 45 # 12-30, Bogotá">
+      <label>Marca del vehículo</label>
+      <input type="text" id="rd-marca" placeholder="Ej. Yamaha">
+      <label>Modelo</label>
+      <input type="text" id="rd-modelo" placeholder="Ej. 2020">
+      <label>Color</label>
+      <input type="text" id="rd-color" placeholder="Ej. Negro">
+      <label>Placa</label>
+      <input type="text" id="rd-placa" placeholder="Ej. ABC12D">
+      <label>Número de licencia de tránsito</label>
+      <input type="text" id="rd-licencia" placeholder="Ej. 12345678">
+      <label>Número de SOAT</label>
+      <input type="text" id="rd-soat" placeholder="Ej. SOAT-000000">
+      <label>Número de tecnomecánica</label>
+      <input type="text" id="rd-tecno" placeholder="Ej. RTM-000000">
+      <label>Zona donde deseas trabajar</label>
+      <select id="rd-zona"></select>
+      <div class="login-error" id="rd-error"></div>
+      <div style="margin-top:16px;">
+        <button class="btn btn-primary" style="width:100%;" onclick="registrarDomiciliario()">Enviar solicitud</button>
+      </div>
+      <p class="sub" style="margin-top:16px;text-align:center;">
+        ¿Ya tienes cuenta? <a href="#" onclick="mostrarLoginDomiciliario();return false;" style="color:var(--accent);font-weight:600;">Inicia sesión</a>
+      </p>
+    </div>
+
+    <div class="card" id="domiciliario-pendiente" style="display:none;max-width:480px;margin:0 auto;">
+      <h2 id="dp-titulo">Solicitud en revisión</h2>
+      <p class="sub" id="dp-mensaje">Tu solicitud está siendo revisada por el administrador. Te avisaremos cuando quede activa.</p>
+      <button class="btn btn-ghost" style="width:100%;" onclick="logout('domiciliario')">Cerrar sesión</button>
     </div>
 
     <div id="domiciliario-content" style="display:none;">
@@ -840,34 +899,14 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
       </div>
 
       <div class="card">
-        <h2>Crear nuevo domiciliario</h2>
-        <p class="sub">Asigna una zona fija a cada domiciliario. Solo verá pedidos de esa zona.</p>
-        <label>Nombre del domiciliario</label>
-        <input type="text" id="nd-nombre" placeholder="Ej. Andrés Ramírez">
-        <label>Correo de la cuenta</label>
-        <input type="email" id="nd-email" placeholder="Ej. andres.domicilios@farmaruta.com">
-        <label>Contraseña</label>
-        <div class="pass-field">
-          <input type="password" id="nd-pass" placeholder="Mínimo 6 caracteres">
-          <button type="button" class="pass-toggle" onclick="togglePass('nd-pass', this)" aria-label="Mostrar contraseña">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
-              <circle cx="12" cy="12" r="3"/>
-              <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
-            </svg>
-          </button>
-        </div>
-        <label>Zona asignada</label>
-        <select id="nd-zona"></select>
-        <div class="login-error" id="nd-error"></div>
-        <div style="margin-top:16px;">
-          <button class="btn btn-primary" style="width:100%;" onclick="crearDomiciliario()">Crear domiciliario</button>
-        </div>
+        <h2>Solicitudes de domiciliarios pendientes</h2>
+        <p class="sub">Revisa los datos antes de aprobar. Puedes confirmar o cambiar la zona solicitada.</p>
+        <div id="administrador-domiciliarios-pendientes-list"></div>
       </div>
 
       <div class="card">
-        <h2>Domiciliarios registrados</h2>
-        <div id="administrador-domiciliarios-list"></div>
+        <h2>Domiciliarios activos</h2>
+        <div id="administrador-domiciliarios-activos-list"></div>
       </div>
 
       <div class="card">
@@ -943,12 +982,17 @@ auth.onAuthStateChanged((user) => {
       document.getElementById(r+'-content').style.display = 'none';
       rolActual[r] = null;
     });
+    const domReg = document.getElementById('domiciliario-registro');
+    if(domReg) domReg.style.display = 'none';
+    const domPend = document.getElementById('domiciliario-pendiente');
+    if(domPend) domPend.style.display = 'none';
     detenerEscuchaStaff();
     return;
   }
 rolesRef.doc(user.uid).get().then(async (doc) => {
     if(doc.exists && ROLES_STAFF.includes(doc.data().role)){
       const rol = doc.data().role;
+      const data = doc.data();
 
       if(rol === 'medico'){
         const autorizado = await verificarDispositivoAutorizado(user);
@@ -962,9 +1006,34 @@ rolesRef.doc(user.uid).get().then(async (doc) => {
       }
 
       if(rol === 'domiciliario'){
-        domiciliarioZona = doc.data().zona || null;
+        domiciliarioZona = data.zona || null;
         const label = document.getElementById('domiciliario-zona-label');
         if(label) label.textContent = domiciliarioZona || 'Sin zona asignada';
+
+        // Un domiciliario "pendiente" o "rechazado" no ve el panel de pedidos,
+        // solo una pantalla informando el estado de su solicitud.
+        if(data.estado !== 'activo'){
+          document.getElementById('domiciliario-login').style.display = 'none';
+          const reg = document.getElementById('domiciliario-registro');
+          if(reg) reg.style.display = 'none';
+          document.getElementById('domiciliario-content').style.display = 'none';
+          const pendiente = document.getElementById('domiciliario-pendiente');
+          if(pendiente){
+            pendiente.style.display = 'block';
+            const titulo = document.getElementById('dp-titulo');
+            const mensaje = document.getElementById('dp-mensaje');
+            if(data.estado === 'rechazado'){
+              titulo.textContent = 'Solicitud rechazada';
+              mensaje.textContent = 'Tu solicitud no fue aprobada. Si crees que es un error, contacta al administrador.';
+            } else {
+              titulo.textContent = 'Solicitud en revisión';
+              mensaje.textContent = 'Tu solicitud está siendo revisada por el administrador. Te avisaremos cuando quede activa.';
+            }
+          }
+          return;
+        }
+        const pendienteOk = document.getElementById('domiciliario-pendiente');
+        if(pendienteOk) pendienteOk.style.display = 'none';
       }
 
     document.getElementById(rol + '-login').style.display = 'none';
@@ -979,8 +1048,8 @@ rolesRef.doc(user.uid).get().then(async (doc) => {
         cargarEpsOpciones();
       }
       if(rol === 'administrador'){
+        await cargarZonas();
         cargarConsultorios();
-        cargarZonas();
         cargarDomiciliarios();
         cargarEpsAdmin();
       }
@@ -1327,18 +1396,6 @@ async function cargarZonas(){
       </div>
     `).join('');
   }
-
-  actualizarSelectZonas();
-}
-
-function actualizarSelectZonas(){
-  const select = document.getElementById('nd-zona');
-  if(!select) return;
-  if(zonasCache.length === 0){
-    select.innerHTML = '<option value="">No hay zonas creadas todavía</option>';
-    return;
-  }
-  select.innerHTML = zonasCache.map(z => `<option value="${z.nombre}">${z.nombre}</option>`).join('');
 }
 
 // Distancia en km entre dos coordenadas (fórmula de Haversine)
@@ -1395,17 +1452,54 @@ async function determinarZona(direccion){
   return { zona, lat: coords.lat, lng: coords.lng };
 }
 
-// ---------- Administrador: crear domiciliarios ----------
-async function crearDomiciliario(){
-  const nombre = document.getElementById('nd-nombre').value.trim();
-  const email = document.getElementById('nd-email').value.trim();
-  const pass = document.getElementById('nd-pass').value;
-  const zona = document.getElementById('nd-zona').value;
-  const errorBox = document.getElementById('nd-error');
+// ---------- Domiciliario: registro propio (queda pendiente de aprobación) ----------
+function mostrarRegistroDomiciliario(){
+  document.getElementById('domiciliario-login').style.display = 'none';
+  document.getElementById('domiciliario-registro').style.display = 'block';
+  cargarZonasRegistro();
+}
+
+function mostrarLoginDomiciliario(){
+  document.getElementById('domiciliario-registro').style.display = 'none';
+  document.getElementById('domiciliario-login').style.display = 'block';
+}
+
+// Llena el <select> de zona en el formulario de registro (lectura pública, no requiere login).
+async function cargarZonasRegistro(){
+  const select = document.getElementById('rd-zona');
+  if(!select) return;
+  try {
+    const snap = await zonasRef.orderBy('nombre').get();
+    if(snap.empty){
+      select.innerHTML = '<option value="">Aún no hay zonas disponibles, contacta al administrador</option>';
+      return;
+    }
+    select.innerHTML = snap.docs.map(d => `<option>${d.data().nombre}</option>`).join('');
+  } catch(err){
+    console.error('Error cargando zonas para el registro:', err);
+  }
+}
+
+async function registrarDomiciliario(){
+  const email = document.getElementById('rd-email').value.trim();
+  const pass = document.getElementById('rd-pass').value;
+  const nombre = document.getElementById('rd-nombre').value.trim();
+  const cedula = document.getElementById('rd-cedula').value.trim();
+  const telefono = document.getElementById('rd-telefono').value.trim();
+  const direccion = document.getElementById('rd-direccion').value.trim();
+  const marca = document.getElementById('rd-marca').value.trim();
+  const modelo = document.getElementById('rd-modelo').value.trim();
+  const color = document.getElementById('rd-color').value.trim();
+  const placa = document.getElementById('rd-placa').value.trim();
+  const licencia = document.getElementById('rd-licencia').value.trim();
+  const soat = document.getElementById('rd-soat').value.trim();
+  const tecno = document.getElementById('rd-tecno').value.trim();
+  const zonaSolicitada = document.getElementById('rd-zona').value;
+  const errorBox = document.getElementById('rd-error');
   errorBox.classList.remove('show');
 
-  if(!nombre || !email || !pass || !zona){
-    errorBox.textContent = 'Completa todos los campos, incluida la zona.';
+  if(!email || !pass || !nombre || !cedula || !telefono || !direccion || !marca || !modelo || !color || !placa || !licencia || !soat || !tecno || !zonaSolicitada){
+    errorBox.textContent = 'Completa todos los campos.';
     errorBox.classList.add('show');
     return;
   }
@@ -1415,58 +1509,94 @@ async function crearDomiciliario(){
     return;
   }
 
-  let secondaryApp = null;
   try {
-    secondaryApp = firebase.initializeApp(firebaseConfig, 'SecondaryDom');
-    try {
-      const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, pass);
-      const nuevoUid = cred.user.uid;
-      await secondaryApp.auth().signOut();
+    const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+    const uid = cred.user.uid;
 
-      await rolesRef.doc(nuevoUid).set({ role: 'domiciliario', zona });
-      await domiciliariosRef.doc(nuevoUid).set({
-        nombre, email, zona,
-        creado: firebase.firestore.FieldValue.serverTimestamp(),
-        creadoPor: auth.currentUser.uid
-      });
-    } finally {
-      await secondaryApp.delete();
-    }
-
-    document.getElementById('nd-nombre').value = '';
-    document.getElementById('nd-email').value = '';
-    document.getElementById('nd-pass').value = '';
-    alert('Domiciliario creado correctamente.');
-    cargarDomiciliarios();
-
+    await rolesRef.doc(uid).set({ role: 'domiciliario', estado: 'pendiente', zona: null });
+    await domiciliariosRef.doc(uid).set({
+      nombre, email, cedula, telefono, direccion,
+      vehiculo: { marca, modelo, color, placa },
+      licenciaTransito: licencia,
+      soat, tecnomecanica: tecno,
+      zonaSolicitada,
+      zona: null,
+      estado: 'pendiente',
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // El listener de auth.onAuthStateChanged se encarga de mostrar la pantalla "pendiente".
   } catch(err){
     console.error(err);
-    errorBox.textContent = 'Error: ' + err.message;
+    errorBox.textContent = 'No se pudo completar el registro: ' + err.message;
     errorBox.classList.add('show');
   }
 }
 
+// ---------- Administrador: aprobar / rechazar solicitudes de domiciliarios ----------
 async function cargarDomiciliarios(){
-  const lista = document.getElementById('administrador-domiciliarios-list');
-  if(!lista) return;
-  const snap = await domiciliariosRef.orderBy('creado','desc').get();
+  const pendientesList = document.getElementById('administrador-domiciliarios-pendientes-list');
+  const activosList = document.getElementById('administrador-domiciliarios-activos-list');
+  if(!pendientesList || !activosList) return;
 
-  if(snap.empty){
-    lista.innerHTML = '<div class="empty-state">Aún no has creado ningún domiciliario.</div>';
-    return;
+  const snap = await domiciliariosRef.orderBy('creado','desc').get();
+  const todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const pendientes = todos.filter(d => d.estado === 'pendiente');
+  const activos = todos.filter(d => d.estado === 'activo');
+
+  if(pendientes.length === 0){
+    pendientesList.innerHTML = '<div class="empty-state">No hay solicitudes pendientes.</div>';
+  } else {
+    pendientesList.innerHTML = pendientes.map(d => `
+      <div class="order-row" style="flex-direction:column;align-items:stretch;">
+        <div class="order-info">
+          <div class="name">${d.nombre} — CC ${d.cedula}</div>
+          <div class="meta">${d.email} · Tel: ${d.telefono}</div>
+          <div class="meta">Dirección: ${d.direccion}</div>
+          <div class="meta">Vehículo: ${d.vehiculo.marca} ${d.vehiculo.modelo}, color ${d.vehiculo.color}, placa ${d.vehiculo.placa}</div>
+          <div class="meta">Licencia tránsito: ${d.licenciaTransito} · SOAT: ${d.soat} · Tecnomecánica: ${d.tecnomecanica}</div>
+          <div class="meta">Zona solicitada: ${d.zonaSolicitada}</div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center;">
+          <select id="zona-aprobar-${d.id}" style="max-width:200px;">
+            ${zonasCache.map(z => `<option value="${z.nombre}" ${z.nombre===d.zonaSolicitada?'selected':''}>${z.nombre}</option>`).join('')}
+          </select>
+          <button class="btn btn-accent btn-sm" onclick="aprobarDomiciliario('${d.id}')">Aprobar</button>
+          <button class="btn btn-ghost btn-sm" onclick="rechazarDomiciliario('${d.id}')">Rechazar</button>
+        </div>
+      </div>
+    `).join('');
   }
 
-  lista.innerHTML = snap.docs.map(doc => {
-    const d = doc.data();
-    return `
+  if(activos.length === 0){
+    activosList.innerHTML = '<div class="empty-state">Aún no tienes domiciliarios activos.</div>';
+  } else {
+    activosList.innerHTML = activos.map(d => `
       <div class="order-row">
         <div class="order-info">
           <div class="name">${d.nombre}</div>
-          <div class="meta">${d.email} · Zona: ${d.zona}</div>
+          <div class="meta">${d.email} · Zona: ${d.zona} · Placa: ${d.vehiculo.placa}</div>
         </div>
       </div>
-    `;
-  }).join('');
+    `).join('');
+  }
+}
+
+async function aprobarDomiciliario(uid){
+  const select = document.getElementById('zona-aprobar-' + uid);
+  const zona = select ? select.value : null;
+  if(!zona){ alert('Selecciona una zona antes de aprobar.'); return; }
+  await rolesRef.doc(uid).update({ estado: 'activo', zona });
+  await domiciliariosRef.doc(uid).update({ estado: 'activo', zona });
+  alert('Domiciliario aprobado.');
+  cargarDomiciliarios();
+}
+
+async function rechazarDomiciliario(uid){
+  if(!confirm('¿Rechazar esta solicitud?')) return;
+  await rolesRef.doc(uid).update({ estado: 'rechazado' });
+  await domiciliariosRef.doc(uid).update({ estado: 'rechazado' });
+  cargarDomiciliarios();
 }
 
 const STEPS = [
