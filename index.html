@@ -458,6 +458,7 @@ footer.note{
   <div class="role-tabs" id="roleTabs">
   <button data-role="paciente" class="active">Paciente</button>
   <button data-role="medico" class="staff-tab">Consultorio</button>
+  <button data-role="institucion" class="staff-tab">Lugar de atención</button>
   <button data-role="farmacia" class="staff-tab">Farmacia</button>
   <button data-role="domiciliario" class="staff-tab">Domiciliario</button>
   <button data-role="eps" class="staff-tab">EPS</button>
@@ -602,6 +603,110 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
         <p class="sub">Últimas fórmulas creadas en esta sesión.</p>
         <div id="medico-list"></div>
       </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= LUGAR DE ATENCIÓN ================= -->
+  <div class="view" id="view-institucion">
+
+    <div class="login-gate" id="institucion-login">
+      <div class="card">
+        <h2>Acceso lugar de atención</h2>
+        <p class="sub">Ingresa con la cuenta de tu hospital, clínica o centro médico.</p>
+        <label>Correo</label>
+        <input type="email" id="institucion-email" placeholder="contacto@hospital.com">
+        <label>Contraseña</label>
+        <div class="pass-field">
+          <input type="password" id="institucion-pass" placeholder="••••••••">
+          <button type="button" class="pass-toggle" onclick="togglePass('institucion-pass', this)" aria-label="Mostrar contraseña">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+            </svg>
+          </button>
+        </div>
+        <div class="login-error" id="institucion-login-error">Correo o contraseña incorrectos, o esta cuenta no tiene acceso.</div>
+        <div style="margin-top:18px;">
+          <button class="btn btn-primary" style="width:100%;" onclick="loginRol('institucion')">Ingresar</button>
+        </div>
+        <p class="sub" style="margin-top:16px;text-align:center;">
+          ¿Aún no tienes cuenta? <a href="#" onclick="mostrarRegistroInstitucion();return false;" style="color:var(--accent);font-weight:600;">Regístrate aquí</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="card" id="institucion-registro" style="display:none;max-width:480px;margin:0 auto;">
+      <h2>Registro de lugar de atención</h2>
+      <p class="sub">Completa los datos de tu hospital, clínica, centro médico o dispensario. Tu cuenta quedará pendiente de aprobación hasta que el administrador la active.</p>
+
+      <label>Nombre del lugar de atención</label>
+      <input type="text" id="ri-nombre" placeholder="Ej. Hospital San Rafael">
+      <label>Tipo</label>
+      <input type="text" id="ri-tipo" placeholder="Ej. Hospital, Clínica, Centro médico, Dispensario...">
+      <label>Correo</label>
+      <input type="email" id="ri-email" placeholder="contacto@hospital.com">
+      <label>Contraseña</label>
+      <div class="pass-field">
+        <input type="password" id="ri-pass" placeholder="Mínimo 6 caracteres">
+        <button type="button" class="pass-toggle" onclick="togglePass('ri-pass', this)" aria-label="Mostrar contraseña">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+            <circle cx="12" cy="12" r="3"/>
+            <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+          </svg>
+        </button>
+      </div>
+      <div class="login-error" id="ri-error"></div>
+      <div style="margin-top:16px;">
+        <button class="btn btn-primary" style="width:100%;" onclick="registrarInstitucion()">Enviar solicitud</button>
+      </div>
+      <p class="sub" style="margin-top:16px;text-align:center;">
+        ¿Ya tienes cuenta? <a href="#" onclick="mostrarLoginInstitucion();return false;" style="color:var(--accent);font-weight:600;">Inicia sesión</a>
+      </p>
+    </div>
+
+    <div class="card" id="institucion-pendiente" style="display:none;max-width:480px;margin:0 auto;">
+      <h2 id="ip-titulo">Solicitud en revisión</h2>
+      <p class="sub" id="ip-mensaje">Tu solicitud está siendo revisada por el administrador. Te avisaremos cuando quede activa.</p>
+      <button class="btn btn-ghost" style="width:100%;" onclick="logout('institucion')">Cerrar sesión</button>
+    </div>
+
+    <div id="institucion-content" style="display:none;">
+      <div class="session-bar">
+        <span class="who">Conectado como <span id="institucion-email-label"></span> · <strong id="institucion-nombre-label"></strong></span>
+        <button onclick="logout('institucion')">Cerrar sesión</button>
+      </div>
+
+      <div class="card">
+        <h2>Crear nuevo consultorio</h2>
+        <p class="sub">Se genera una cuenta para el PC del consultorio. La contraseña solo la manejas tú.</p>
+        <label>Nombre o número del consultorio</label>
+        <input type="text" id="ic-nombre" placeholder="Ej. Consultorio 3 - Piso 2">
+        <label>Correo de la cuenta</label>
+        <input type="email" id="ic-email" placeholder="Ej. consultorio3@hospital.com">
+        <label>Contraseña</label>
+        <div class="pass-field">
+          <input type="password" id="ic-pass" placeholder="Mínimo 6 caracteres">
+          <button type="button" class="pass-toggle" onclick="togglePass('ic-pass', this)" aria-label="Mostrar contraseña">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+            </svg>
+          </button>
+        </div>
+        <div class="login-error" id="ic-error"></div>
+        <div style="margin-top:16px;">
+          <button class="btn btn-primary" style="width:100%;" onclick="crearConsultorioInstitucion()">Crear consultorio</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Tus consultorios</h2>
+        <p class="sub">Solo se muestran los consultorios que pertenecen a tu lugar de atención.</p>
+        <div id="institucion-consultorios-list"></div>
       </div>
     </div>
   </div>
@@ -788,7 +893,7 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
 
     <div id="eps-content" style="display:none;">
       <div class="session-bar">
-        <span class="who">Conectado como <span id="eps-email-label"></span></span>
+        <span class="who">Conectado como <span id="eps-email-label"></span> · EPS: <strong id="eps-nombre-label"></strong></span>
         <button onclick="logout('eps')">Cerrar sesión</button>
       </div>
       <div class="kpi-row">
@@ -866,6 +971,46 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
           <button class="btn btn-ghost" onclick="cargarEpsEjemplo()">Cargar EPS de ejemplo</button>
         </div>
         <div id="administrador-eps-list" style="margin-top:16px;"></div>
+      </div>
+
+      <div class="card">
+        <h2>Crear cuenta de EPS</h2>
+        <p class="sub">Cada EPS solo verá y autorizará los pedidos de sus propios afiliados.</p>
+        <label>EPS</label>
+        <select id="ne-eps"></select>
+        <label>Correo de la cuenta</label>
+        <input type="email" id="ne-email" placeholder="Ej. sura@farmaruta.com">
+        <label>Contraseña</label>
+        <div class="pass-field">
+          <input type="password" id="ne-pass" placeholder="Mínimo 6 caracteres">
+          <button type="button" class="pass-toggle" onclick="togglePass('ne-pass', this)" aria-label="Mostrar contraseña">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+            </svg>
+          </button>
+        </div>
+        <div class="login-error" id="ne-error"></div>
+        <div style="margin-top:16px;">
+          <button class="btn btn-primary" style="width:100%;" onclick="crearCuentaEps()">Crear cuenta EPS</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Cuentas EPS registradas</h2>
+        <div id="administrador-eps-cuentas-list"></div>
+      </div>
+
+      <div class="card">
+        <h2>Solicitudes de lugares de atención pendientes</h2>
+        <p class="sub">Hospitales, clínicas o centros médicos que se registraron y esperan aprobación.</p>
+        <div id="administrador-instituciones-pendientes-list"></div>
+      </div>
+
+      <div class="card">
+        <h2>Lugares de atención activos</h2>
+        <div id="administrador-instituciones-activas-list"></div>
       </div>
 
       <div class="card">
@@ -965,14 +1110,19 @@ const pacientesRef = db.collection('pacientes');
 const zonasRef = db.collection('zonas');
 const domiciliariosRef = db.collection('domiciliarios');
 const epsRef = db.collection('eps');
+const epsCuentasRef = db.collection('eps_cuentas');
+const institucionesRef = db.collection('instituciones');
 let confirmationResult = null;
 let pacienteCedula = null;
 let pacienteDireccion = null;
 let rolActual = { farmacia: null, eps: null, medico: null, domiciliario: null };
 let domiciliarioZona = null;
+let miEpsNombre = null;
+let miInstitucionId = null;
+let miInstitucionNombre = null;
 let zonasCache = [];
 
-const ROLES_STAFF = ['farmacia','eps','medico','administrador','domiciliario'];
+const ROLES_STAFF = ['farmacia','eps','medico','administrador','domiciliario','institucion'];
 
 // ---------- Sesión de STAFF (médico / farmacia / eps / domiciliario / admin) ----------
 auth.onAuthStateChanged((user) => {
@@ -986,6 +1136,10 @@ auth.onAuthStateChanged((user) => {
     if(domReg) domReg.style.display = 'none';
     const domPend = document.getElementById('domiciliario-pendiente');
     if(domPend) domPend.style.display = 'none';
+    const instReg = document.getElementById('institucion-registro');
+    if(instReg) instReg.style.display = 'none';
+    const instPend = document.getElementById('institucion-pendiente');
+    if(instPend) instPend.style.display = 'none';
     detenerEscuchaStaff();
     return;
   }
@@ -1036,6 +1190,46 @@ rolesRef.doc(user.uid).get().then(async (doc) => {
         if(pendienteOk) pendienteOk.style.display = 'none';
       }
 
+      if(rol === 'eps'){
+        miEpsNombre = data.eps || null;
+        const label = document.getElementById('eps-nombre-label');
+        if(label) label.textContent = miEpsNombre || 'Sin EPS asignada';
+      }
+
+      if(rol === 'institucion'){
+        miInstitucionId = user.uid;
+
+        // Un lugar de atención "pendiente" o "rechazado" no ve el panel de consultorios,
+        // solo una pantalla informando el estado de su solicitud.
+        if(data.estado !== 'activo'){
+          document.getElementById('institucion-login').style.display = 'none';
+          const reg = document.getElementById('institucion-registro');
+          if(reg) reg.style.display = 'none';
+          document.getElementById('institucion-content').style.display = 'none';
+          const pendiente = document.getElementById('institucion-pendiente');
+          if(pendiente){
+            pendiente.style.display = 'block';
+            const titulo = document.getElementById('ip-titulo');
+            const mensaje = document.getElementById('ip-mensaje');
+            if(data.estado === 'rechazado'){
+              titulo.textContent = 'Solicitud rechazada';
+              mensaje.textContent = 'Tu solicitud no fue aprobada. Si crees que es un error, contacta al administrador.';
+            } else {
+              titulo.textContent = 'Solicitud en revisión';
+              mensaje.textContent = 'Tu solicitud está siendo revisada por el administrador. Te avisaremos cuando quede activa.';
+            }
+          }
+          return;
+        }
+        const pendienteOk = document.getElementById('institucion-pendiente');
+        if(pendienteOk) pendienteOk.style.display = 'none';
+
+        const instSnap = await institucionesRef.doc(user.uid).get();
+        miInstitucionNombre = instSnap.exists ? instSnap.data().nombre : user.email;
+        const nombreLabel = document.getElementById('institucion-nombre-label');
+        if(nombreLabel) nombreLabel.textContent = miInstitucionNombre;
+      }
+
     document.getElementById(rol + '-login').style.display = 'none';
       document.getElementById(rol + '-content').style.display = 'block';
       document.getElementById(rol + '-email-label').textContent = user.email;
@@ -1047,11 +1241,17 @@ rolesRef.doc(user.uid).get().then(async (doc) => {
         mostrarTurnoActivo();
         cargarEpsOpciones();
       }
+      if(rol === 'institucion'){
+        cargarConsultoriosInstitucion();
+      }
       if(rol === 'administrador'){
         await cargarZonas();
         cargarConsultorios();
         cargarDomiciliarios();
         cargarEpsAdmin();
+        cargarEpsSelectAdmin();
+        cargarCuentasEps();
+        cargarInstituciones();
       }
     }
   });
@@ -1341,6 +1541,268 @@ async function cargarEpsOpciones(){
     return;
   }
   select.innerHTML = snap.docs.map(d => `<option>${d.data().nombre}</option>`).join('');
+}
+
+// ---------- Administrador: crear cuentas de EPS (cada una ligada a una EPS específica) ----------
+async function cargarEpsSelectAdmin(){
+  const select = document.getElementById('ne-eps');
+  if(!select) return;
+  const snap = await epsRef.orderBy('nombre').get();
+  if(snap.empty){
+    select.innerHTML = '<option value="">Primero agrega una EPS en "EPS de la red"</option>';
+    return;
+  }
+  select.innerHTML = snap.docs.map(d => `<option>${d.data().nombre}</option>`).join('');
+}
+
+async function crearCuentaEps(){
+  const nombreEps = document.getElementById('ne-eps').value;
+  const email = document.getElementById('ne-email').value.trim();
+  const pass = document.getElementById('ne-pass').value;
+  const errorBox = document.getElementById('ne-error');
+  errorBox.classList.remove('show');
+
+  if(!nombreEps || !email || !pass){
+    errorBox.textContent = 'Completa todos los campos.';
+    errorBox.classList.add('show');
+    return;
+  }
+  if(pass.length < 6){
+    errorBox.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    errorBox.classList.add('show');
+    return;
+  }
+
+  let secondaryApp = null;
+  try {
+    secondaryApp = firebase.initializeApp(firebaseConfig, 'SecondaryEps');
+    try {
+      const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, pass);
+      const nuevoUid = cred.user.uid;
+      await secondaryApp.auth().signOut();
+
+      await rolesRef.doc(nuevoUid).set({ role: 'eps', eps: nombreEps });
+      await epsCuentasRef.doc(nuevoUid).set({
+        eps: nombreEps, email,
+        creado: firebase.firestore.FieldValue.serverTimestamp(),
+        creadoPor: auth.currentUser.uid
+      });
+    } finally {
+      await secondaryApp.delete();
+    }
+
+    document.getElementById('ne-email').value = '';
+    document.getElementById('ne-pass').value = '';
+    alert('Cuenta de EPS creada correctamente.');
+    cargarCuentasEps();
+  } catch(err){
+    console.error(err);
+    errorBox.textContent = 'Error: ' + err.message;
+    errorBox.classList.add('show');
+  }
+}
+
+async function cargarCuentasEps(){
+  const lista = document.getElementById('administrador-eps-cuentas-list');
+  if(!lista) return;
+  const snap = await epsCuentasRef.orderBy('creado','desc').get();
+
+  if(snap.empty){
+    lista.innerHTML = '<div class="empty-state">Aún no has creado ninguna cuenta de EPS.</div>';
+    return;
+  }
+
+  lista.innerHTML = snap.docs.map(doc => {
+    const d = doc.data();
+    return `
+      <div class="order-row">
+        <div class="order-info">
+          <div class="name">${d.eps}</div>
+          <div class="meta">${d.email}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ---------- Lugar de atención: registro propio (queda pendiente de aprobación) ----------
+function mostrarRegistroInstitucion(){
+  document.getElementById('institucion-login').style.display = 'none';
+  document.getElementById('institucion-registro').style.display = 'block';
+}
+
+function mostrarLoginInstitucion(){
+  document.getElementById('institucion-registro').style.display = 'none';
+  document.getElementById('institucion-login').style.display = 'block';
+}
+
+async function registrarInstitucion(){
+  const nombre = document.getElementById('ri-nombre').value.trim();
+  const tipo = document.getElementById('ri-tipo').value.trim();
+  const email = document.getElementById('ri-email').value.trim();
+  const pass = document.getElementById('ri-pass').value;
+  const errorBox = document.getElementById('ri-error');
+  errorBox.classList.remove('show');
+
+  if(!nombre || !tipo || !email || !pass){
+    errorBox.textContent = 'Completa todos los campos.';
+    errorBox.classList.add('show');
+    return;
+  }
+  if(pass.length < 6){
+    errorBox.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    errorBox.classList.add('show');
+    return;
+  }
+
+  try {
+    const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+    const uid = cred.user.uid;
+
+    await rolesRef.doc(uid).set({ role: 'institucion', estado: 'pendiente' });
+    await institucionesRef.doc(uid).set({
+      nombre, tipo, email,
+      estado: 'pendiente',
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // El listener de auth.onAuthStateChanged se encarga de mostrar la pantalla "pendiente".
+  } catch(err){
+    console.error(err);
+    errorBox.textContent = 'No se pudo completar el registro: ' + err.message;
+    errorBox.classList.add('show');
+  }
+}
+
+// ---------- Lugar de atención: crear sus propios consultorios ----------
+async function crearConsultorioInstitucion(){
+  const nombreConsultorio = document.getElementById('ic-nombre').value.trim();
+  const email = document.getElementById('ic-email').value.trim();
+  const pass = document.getElementById('ic-pass').value;
+  const errorBox = document.getElementById('ic-error');
+  errorBox.classList.remove('show');
+
+  if(!nombreConsultorio || !email || !pass){
+    errorBox.textContent = 'Completa todos los campos.';
+    errorBox.classList.add('show');
+    return;
+  }
+  if(pass.length < 6){
+    errorBox.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    errorBox.classList.add('show');
+    return;
+  }
+
+  let secondaryApp = null;
+  try {
+    secondaryApp = firebase.initializeApp(firebaseConfig, 'SecondaryInst');
+    try {
+      const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, pass);
+      const nuevoUid = cred.user.uid;
+      await secondaryApp.auth().signOut();
+
+      await rolesRef.doc(nuevoUid).set({ role: 'medico' });
+      await db.collection('consultorios').doc(nuevoUid).set({
+        nombre: nombreConsultorio,
+        email: email,
+        institucionId: auth.currentUser.uid,
+        creado: firebase.firestore.FieldValue.serverTimestamp(),
+        creadoPor: auth.currentUser.uid
+      });
+    } finally {
+      await secondaryApp.delete();
+    }
+
+    document.getElementById('ic-nombre').value = '';
+    document.getElementById('ic-email').value = '';
+    document.getElementById('ic-pass').value = '';
+    alert('Consultorio creado correctamente.');
+    cargarConsultoriosInstitucion();
+
+  } catch(err){
+    console.error(err);
+    errorBox.textContent = 'Error: ' + err.message;
+    errorBox.classList.add('show');
+  }
+}
+
+async function cargarConsultoriosInstitucion(){
+  const lista = document.getElementById('institucion-consultorios-list');
+  if(!lista || !auth.currentUser) return;
+  const snap = await db.collection('consultorios').where('institucionId','==',auth.currentUser.uid).orderBy('creado','desc').get();
+
+  if(snap.empty){
+    lista.innerHTML = '<div class="empty-state">Aún no has creado ningún consultorio.</div>';
+    return;
+  }
+
+  lista.innerHTML = snap.docs.map(doc => {
+    const data = doc.data();
+    return `
+      <div class="order-row">
+        <div class="order-info">
+          <div class="name">${data.nombre}</div>
+          <div class="meta">${data.email}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ---------- Administrador: aprobar / rechazar solicitudes de lugares de atención ----------
+async function cargarInstituciones(){
+  const pendientesList = document.getElementById('administrador-instituciones-pendientes-list');
+  const activasList = document.getElementById('administrador-instituciones-activas-list');
+  if(!pendientesList || !activasList) return;
+
+  const snap = await institucionesRef.orderBy('creado','desc').get();
+  const todas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const pendientes = todas.filter(i => i.estado === 'pendiente');
+  const activas = todas.filter(i => i.estado === 'activo');
+
+  if(pendientes.length === 0){
+    pendientesList.innerHTML = '<div class="empty-state">No hay solicitudes pendientes.</div>';
+  } else {
+    pendientesList.innerHTML = pendientes.map(i => `
+      <div class="order-row">
+        <div class="order-info">
+          <div class="name">${i.nombre}</div>
+          <div class="meta">${i.tipo} · ${i.email}</div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-accent btn-sm" onclick="aprobarInstitucion('${i.id}')">Aprobar</button>
+          <button class="btn btn-ghost btn-sm" onclick="rechazarInstitucion('${i.id}')">Rechazar</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  if(activas.length === 0){
+    activasList.innerHTML = '<div class="empty-state">Aún no tienes lugares de atención activos.</div>';
+  } else {
+    activasList.innerHTML = activas.map(i => `
+      <div class="order-row">
+        <div class="order-info">
+          <div class="name">${i.nombre}</div>
+          <div class="meta">${i.tipo} · ${i.email}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+async function aprobarInstitucion(uid){
+  await rolesRef.doc(uid).update({ estado: 'activo' });
+  await institucionesRef.doc(uid).update({ estado: 'activo' });
+  alert('Lugar de atención aprobado.');
+  cargarInstituciones();
+}
+
+async function rechazarInstitucion(uid){
+  if(!confirm('¿Rechazar esta solicitud?')) return;
+  await rolesRef.doc(uid).update({ estado: 'rechazado' });
+  await institucionesRef.doc(uid).update({ estado: 'rechazado' });
+  cargarInstituciones();
 }
 
 async function crearZona(){
@@ -2155,13 +2617,18 @@ function renderDomiciliario(){
   }
 }
 
+// La EPS solo ve y autoriza los pedidos de sus propios afiliados (filtrado por p.eps === miEpsNombre).
 function renderEPS(){
-  document.getElementById('kpi-pendientes').textContent = pedidos.filter(p=>p.status==='pendiente').length;
-  document.getElementById('kpi-autorizados').textContent = pedidos.filter(p=>p.status==='autorizado' || p.status==='transito').length;
-  document.getElementById('kpi-entregados').textContent = pedidos.filter(p=>p.status==='entregado').length;
-
   const list = document.getElementById('eps-list');
-  const pendientes = pedidos.filter(p=>p.status==='pendiente');
+  if(!list) return;
+
+  const propios = pedidos.filter(p => p.eps === miEpsNombre);
+
+  document.getElementById('kpi-pendientes').textContent = propios.filter(p=>p.status==='pendiente').length;
+  document.getElementById('kpi-autorizados').textContent = propios.filter(p=>p.status==='autorizado' || p.status==='transito').length;
+  document.getElementById('kpi-entregados').textContent = propios.filter(p=>p.status==='entregado').length;
+
+  const pendientes = propios.filter(p=>p.status==='pendiente');
   if(pendientes.length===0){
     list.innerHTML = '<div class="empty-state">No hay solicitudes pendientes en este momento.</div>';
     return;
@@ -2178,9 +2645,30 @@ function renderEPS(){
   `).join('');
 }
 
-// Mostrar pestañas de staff solo con acceso especial (?staff=1 en la URL)
-if (new URLSearchParams(window.location.search).get('staff') === '1') {
+// Mostrar pestañas de staff solo con acceso especial (?staff=1 en la URL).
+// ?domiciliario=1 e ?institucion=1 son links aparte, seguros de compartir públicamente
+// para reclutar: cada uno solo revela su propia pestaña (no expone las demás).
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('staff') === '1') {
   document.querySelectorAll('.staff-tab').forEach(el => el.classList.remove('staff-tab'));
+} else if (urlParams.get('domiciliario') === '1') {
+  const domBtn = document.querySelector('.role-tabs button[data-role="domiciliario"]');
+  if(domBtn){
+    domBtn.classList.remove('staff-tab');
+    document.querySelectorAll('.role-tabs button').forEach(b=>b.classList.remove('active'));
+    domBtn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-domiciliario').classList.add('active');
+  }
+} else if (urlParams.get('institucion') === '1') {
+  const instBtn = document.querySelector('.role-tabs button[data-role="institucion"]');
+  if(instBtn){
+    instBtn.classList.remove('staff-tab');
+    document.querySelectorAll('.role-tabs button').forEach(b=>b.classList.remove('active'));
+    instBtn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-institucion').classList.add('active');
+  }
 }
 renderAll();
 
