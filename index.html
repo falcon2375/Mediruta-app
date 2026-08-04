@@ -680,6 +680,19 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
       </div>
 
       <div class="card">
+        <h2>Datos del lugar de atención</h2>
+        <p class="sub">Puedes actualizar el nombre y el tipo cuando lo necesites.</p>
+        <label>Nombre del lugar de atención</label>
+        <input type="text" id="ie-nombre" placeholder="Ej. Hospital San Rafael">
+        <label>Tipo</label>
+        <input type="text" id="ie-tipo" placeholder="Ej. Hospital, Clínica, Centro médico, Dispensario...">
+        <div class="login-error" id="ie-error"></div>
+        <div style="margin-top:16px;">
+          <button class="btn btn-primary" style="width:100%;" onclick="guardarDatosInstitucion()">Guardar cambios</button>
+        </div>
+      </div>
+
+      <div class="card">
         <h2>Crear nuevo consultorio</h2>
         <p class="sub">Se genera una cuenta para el PC del consultorio. La contraseña solo la manejas tú.</p>
         <label>Nombre o número del consultorio</label>
@@ -1014,30 +1027,6 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
       </div>
 
       <div class="card">
-        <h2>Crear nuevo consultorio</h2>
-        <p class="sub">Se genera una cuenta para el PC del consultorio. La contraseña solo la manejas tú.</p>
-        <label>Nombre o número del consultorio</label>
-        <input type="text" id="nc-nombre" placeholder="Ej. Consultorio 3 - Piso 2">
-        <label>Correo de la cuenta</label>
-        <input type="email" id="nc-email" placeholder="Ej. consultorio3@clinica.com">
-        <label>Contraseña</label>
-        <div class="pass-field">
-          <input type="password" id="nc-pass" placeholder="Mínimo 6 caracteres">
-          <button type="button" class="pass-toggle" onclick="togglePass('nc-pass', this)" aria-label="Mostrar contraseña">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
-              <circle cx="12" cy="12" r="3"/>
-              <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
-            </svg>
-          </button>
-        </div>
-        <div class="login-error" id="nc-error"></div>
-        <div style="margin-top:16px;">
-          <button class="btn btn-primary" style="width:100%;" onclick="crearConsultorio()">Crear consultorio</button>
-        </div>
-      </div>
-
-      <div class="card">
         <h2>Consultorios registrados</h2>
         <p class="sub">Cada uno queda atado al primer PC donde se use. Si cambias de equipo, libera el dispositivo aquí.</p>
         <div id="administrador-consultorios-list"></div>
@@ -1225,9 +1214,14 @@ rolesRef.doc(user.uid).get().then(async (doc) => {
         if(pendienteOk) pendienteOk.style.display = 'none';
 
         const instSnap = await institucionesRef.doc(user.uid).get();
-        miInstitucionNombre = instSnap.exists ? instSnap.data().nombre : user.email;
+        const instData = instSnap.exists ? instSnap.data() : {};
+        miInstitucionNombre = instData.nombre || user.email;
         const nombreLabel = document.getElementById('institucion-nombre-label');
         if(nombreLabel) nombreLabel.textContent = miInstitucionNombre;
+        const nombreInput = document.getElementById('ie-nombre');
+        const tipoInput = document.getElementById('ie-tipo');
+        if(nombreInput) nombreInput.value = instData.nombre || '';
+        if(tipoInput) tipoInput.value = instData.tipo || '';
       }
 
     document.getElementById(rol + '-login').style.display = 'none';
@@ -1282,57 +1276,6 @@ function loginRol(rol){
     errorBox.classList.add('show');
     console.error(err);
   });
-}
-
-// ---------- Administrador: crear consultorios ----------
-async function crearConsultorio(){
-  const nombreConsultorio = document.getElementById('nc-nombre').value.trim();
-  const email = document.getElementById('nc-email').value.trim();
-  const pass = document.getElementById('nc-pass').value;
-  const errorBox = document.getElementById('nc-error');
-  errorBox.classList.remove('show');
-
-  if(!nombreConsultorio || !email || !pass){
-    errorBox.textContent = 'Completa todos los campos.';
-    errorBox.classList.add('show');
-    return;
-  }
-  if(pass.length < 6){
-    errorBox.textContent = 'La contraseña debe tener al menos 6 caracteres.';
-    errorBox.classList.add('show');
-    return;
-  }
-
-  let secondaryApp = null;
-  try {
-    secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary');
-    try {
-      const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, pass);
-      const nuevoUid = cred.user.uid;
-      await secondaryApp.auth().signOut();
-
-      await rolesRef.doc(nuevoUid).set({ role: 'medico' });
-      await db.collection('consultorios').doc(nuevoUid).set({
-        nombre: nombreConsultorio,
-        email: email,
-        creado: firebase.firestore.FieldValue.serverTimestamp(),
-        creadoPor: auth.currentUser.uid
-      });
-    } finally {
-      await secondaryApp.delete();
-    }
-
-    document.getElementById('nc-nombre').value = '';
-    document.getElementById('nc-email').value = '';
-    document.getElementById('nc-pass').value = '';
-    alert('Consultorio creado correctamente.');
-    cargarConsultorios();
-
-  } catch(err){
-    console.error(err);
-    errorBox.textContent = 'Error: ' + err.message;
-    errorBox.classList.add('show');
-  }
 }
 
 async function cargarConsultorios(){
@@ -1746,6 +1689,32 @@ async function cargarConsultoriosInstitucion(){
       </div>
     `;
   }).join('');
+}
+
+// El lugar de atención puede editar su propio nombre y tipo cuando quiera.
+async function guardarDatosInstitucion(){
+  const nombre = document.getElementById('ie-nombre').value.trim();
+  const tipo = document.getElementById('ie-tipo').value.trim();
+  const errorBox = document.getElementById('ie-error');
+  errorBox.classList.remove('show');
+
+  if(!nombre || !tipo){
+    errorBox.textContent = 'Completa el nombre y el tipo.';
+    errorBox.classList.add('show');
+    return;
+  }
+
+  try {
+    await institucionesRef.doc(auth.currentUser.uid).update({ nombre, tipo });
+    miInstitucionNombre = nombre;
+    const nombreLabel = document.getElementById('institucion-nombre-label');
+    if(nombreLabel) nombreLabel.textContent = nombre;
+    alert('Datos actualizados.');
+  } catch(err){
+    console.error(err);
+    errorBox.textContent = 'Error: ' + err.message;
+    errorBox.classList.add('show');
+  }
 }
 
 // ---------- Administrador: aprobar / rechazar solicitudes de lugares de atención ----------
