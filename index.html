@@ -1338,6 +1338,8 @@ function togglePass(id, btn){
 }
 
 function logout(rol){
+  const banner = document.getElementById('connStatus');
+  if(banner) banner.style.display = 'none';
   auth.signOut();
 }
 function getDeviceId(){
@@ -2064,6 +2066,7 @@ function iniciarEscuchaStaff(){
   if(staffUnsub) return;
   staffUnsub = pedidosRef.orderBy('creado', 'desc').onSnapshot((snapshot) => {
     conectado = true;
+    document.getElementById('connStatus').style.display = 'none';
     pedidos = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderFarmacia();
     renderEPS();
