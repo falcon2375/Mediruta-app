@@ -16,6 +16,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/JsBarcode/3.11.5/JsBarcode.all.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
 
@@ -757,6 +758,18 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
         <span class="who">Conectado como <span id="farmacia-email-label"></span></span>
         <button onclick="logout('farmacia')">Cerrar sesión</button>
       </div>
+
+      <div class="card">
+        <h2>Confirmar entrega a domiciliario</h2>
+        <p class="sub">Escanea o escribe el código que te muestra el domiciliario para verificar y confirmar el lote que se lleva.</p>
+        <input type="text" id="lote-codigo" placeholder="Ej. 2375" onkeydown="if(event.key==='Enter'){event.preventDefault();buscarLotePorCodigo();}">
+        <div class="login-error" id="lote-error"></div>
+        <div style="margin-top:12px;">
+          <button class="btn btn-primary" style="width:100%;" onclick="buscarLotePorCodigo()">Buscar código</button>
+        </div>
+        <div id="lote-resultado" style="margin-top:14px;"></div>
+      </div>
+
       <div class="card">
         <h2>Bandeja de pedidos — Droguería San Rafael</h2>
         <p class="sub">Pedidos ya autorizados por la EPS, agrupados por zona de entrega para que los alistes con anticipación.</p>
@@ -865,9 +878,11 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
 
       <div class="card">
         <h2>Disponibles para recoger en tu zona</h2>
-        <p class="sub">Pedidos ya alistados por la farmacia, listos para que los tomes.</p>
+        <p class="sub">Selecciona los que vas a recoger y genera un código para confirmar la entrega en la farmacia.</p>
         <div id="domiciliario-disponibles-list"></div>
       </div>
+
+      <div id="domiciliario-lotes-pendientes"></div>
 
       <div class="card">
         <h2>Tus entregas en curso</h2>
@@ -1101,6 +1116,7 @@ const domiciliariosRef = db.collection('domiciliarios');
 const epsRef = db.collection('eps');
 const epsCuentasRef = db.collection('eps_cuentas');
 const institucionesRef = db.collection('instituciones');
+const lotesRef = db.collection('lotes');
 let confirmationResult = null;
 let pacienteCedula = null;
 let pacienteDireccion = null;
@@ -2379,21 +2395,222 @@ function autorizar(id){
   pedidosRef.doc(id).update({ status: 'autorizado' });
 }
 
-function despachar(id){
-  pedidosRef.doc(id).update({ status: 'transito' });
+// Asigna un número interno consecutivo (para el sticker de seguridad) usando una
+// transacción de Firestore, que garantiza que dos alistamientos simultáneos nunca
+// reciban el mismo número.
+async function siguienteNumeroInterno(){
+  const contadorRef = db.collection('contadores').doc('numeroInterno');
+  return db.runTransaction(async (tx) => {
+    const doc = await tx.get(contadorRef);
+    const actual = doc.exists ? doc.data().valor : 0;
+    const siguiente = actual + 1;
+    tx.set(contadorRef, { valor: siguiente });
+    return siguiente;
+  });
 }
 
-// El domiciliario toma un pedido disponible en su zona.
-async function tomarPedido(id){
+// Farmacia alista el pedido: pasa a "transito" y recibe su número interno consecutivo.
+async function despachar(id){
+  const numeroInterno = await siguienteNumeroInterno();
+  await pedidosRef.doc(id).update({ status: 'transito', numeroInterno });
+}
+
+// Abre una ventana lista para imprimir el sticker de seguridad de un pedido ya alistado.
+function imprimirSticker(id){
+  const p = pedidos.find(x => x.id === id);
+  if(!p) return;
+  const win = window.open('', '_blank', 'width=420,height=620');
+  win.document.write(`
+    <html><head><title>Sticker #${p.numeroInterno || ''}</title>
+    <style>
+      body{font-family:Arial,sans-serif;padding:16px;margin:0;}
+      .marca{text-align:center;font-weight:700;font-size:0.9rem;color:#1F4D3D;}
+      .num{font-size:2.4rem;font-weight:800;text-align:center;margin:10px 0;}
+      .campo{margin:6px 0;font-size:0.85rem;line-height:1.3;}
+      .campo b{display:block;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;color:#666;}
+      svg{display:block;margin:14px auto 4px;}
+      @media print{ @page{ size: 8cm 6cm; margin:4mm; } }
+    </style>
+    </head><body>
+      <div class="marca">FarmaRuta</div>
+      <div class="num">#${p.numeroInterno || '—'}</div>
+      <div class="campo"><b>Paciente</b>${p.nombre}</div>
+      <div class="campo"><b>Entrega</b>${p.dir}</div>
+      <div class="campo"><b>Zona</b>${p.zona || 'Sin definir'}</div>
+      <div class="campo"><b>Código de pedido</b>${p.codigo}</div>
+      <svg id="bc"></svg>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/JsBarcode/3.11.5/JsBarcode.all.min.js"><\/script>
+      <script>
+        JsBarcode("#bc", "${p.numeroInterno || p.codigo}", {format:"CODE128", width:2, height:46, displayValue:false});
+        window.onload = () => window.print();
+      <\/script>
+    </body></html>
+  `);
+  win.document.close();
+}
+
+// ---------- Domiciliario: seleccionar varios pedidos y generar un código de recogida ----------
+let loteSeleccionados = new Set();
+
+function toggleSeleccionLote(id, checked){
+  if(checked) loteSeleccionados.add(id);
+  else loteSeleccionados.delete(id);
+  actualizarBotonGenerarLote();
+}
+
+function seleccionarTodosLote(checked){
+  document.querySelectorAll('.chk-lote').forEach(chk => {
+    chk.checked = checked;
+    toggleSeleccionLote(chk.dataset.id, checked);
+  });
+}
+
+function actualizarBotonGenerarLote(){
+  const btn = document.getElementById('btn-generar-lote');
+  if(!btn) return;
+  btn.disabled = loteSeleccionados.size === 0;
+  btn.textContent = loteSeleccionados.size === 0
+    ? 'Selecciona pedidos para generar un código'
+    : `Generar código de recogida (${loteSeleccionados.size} pedido${loteSeleccionados.size===1?'':'s'})`;
+}
+
+async function generarLote(){
+  if(loteSeleccionados.size === 0) return;
+  const ids = Array.from(loteSeleccionados);
+  const codigo = Math.floor(1000 + Math.random()*9000).toString();
   const user = auth.currentUser;
   if(!user) return;
+
   const domSnap = await domiciliariosRef.doc(user.uid).get();
   const nombreDom = domSnap.exists ? domSnap.data().nombre : user.email;
-  await pedidosRef.doc(id).update({
-    domiciliarioId: user.uid,
-    domiciliarioNombre: nombreDom,
-    tomadoEn: firebase.firestore.FieldValue.serverTimestamp()
+
+  try {
+    const loteRef = await lotesRef.add({
+      codigo,
+      domiciliarioId: user.uid,
+      domiciliarioNombre: nombreDom,
+      zona: domiciliarioZona,
+      pedidoIds: ids,
+      estado: 'generado',
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    await Promise.all(ids.map(id => pedidosRef.doc(id).update({
+      domiciliarioId: user.uid,
+      domiciliarioNombre: nombreDom,
+      loteId: loteRef.id,
+      tomadoEn: firebase.firestore.FieldValue.serverTimestamp()
+    })));
+
+    loteSeleccionados.clear();
+    alert('Código de recogida generado: ' + codigo + '\n\nMuéstralo o escanéalo en la farmacia para confirmar la entrega.');
+    cargarMisLotesPendientes();
+  } catch(err){
+    console.error(err);
+    alert('No se pudo generar el código: ' + err.message);
+  }
+}
+
+async function cargarMisLotesPendientes(){
+  const cont = document.getElementById('domiciliario-lotes-pendientes');
+  if(!cont || !auth.currentUser) return;
+  const snap = await lotesRef
+    .where('domiciliarioId','==',auth.currentUser.uid)
+    .where('estado','==','generado')
+    .get();
+
+  if(snap.empty){
+    cont.innerHTML = '';
+    return;
+  }
+
+  const lotes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  cont.innerHTML = lotes.map(l => `
+    <div class="card" style="text-align:center;">
+      <p class="sub">Código de recogida pendiente de confirmar en farmacia · ${l.pedidoIds.length} pedido${l.pedidoIds.length===1?'':'s'}</p>
+      <div style="font-size:2rem;font-weight:800;letter-spacing:0.1em;color:var(--primary);">${l.codigo}</div>
+      <svg id="bc-${l.id}"></svg>
+    </div>
+  `).join('');
+
+  lotes.forEach(l => {
+    if(window.JsBarcode){
+      try { JsBarcode('#bc-' + l.id, l.codigo, {format:'CODE128', width:2, height:50, displayValue:false}); }
+      catch(e){ console.error('Error generando código de barras:', e); }
+    }
   });
+}
+
+// ---------- Farmacia: confirmar entrega de un lote leyendo su código ----------
+async function buscarLotePorCodigo(){
+  const codigo = document.getElementById('lote-codigo').value.trim();
+  const resultado = document.getElementById('lote-resultado');
+  const errorBox = document.getElementById('lote-error');
+  errorBox.classList.remove('show');
+  resultado.innerHTML = '';
+
+  if(!codigo){
+    errorBox.textContent = 'Escribe o escanea un código.';
+    errorBox.classList.add('show');
+    return;
+  }
+
+  try {
+    const snap = await lotesRef.where('codigo','==',codigo).where('estado','==','generado').limit(1).get();
+    if(snap.empty){
+      errorBox.textContent = 'No se encontró un lote pendiente con ese código.';
+      errorBox.classList.add('show');
+      return;
+    }
+
+    const loteDoc = snap.docs[0];
+    const lote = loteDoc.data();
+    const pedidosDelLote = pedidos.filter(p => lote.pedidoIds.includes(p.id));
+
+    resultado.innerHTML = `
+      <div class="status-banner">
+        <strong>${lote.domiciliarioNombre}</strong> · Zona: ${lote.zona || '—'} · ${pedidosDelLote.length} pedido(s)
+      </div>
+      ${pedidosDelLote.map(p => `
+        <div class="order-row">
+          <div class="order-info">
+            <div class="name">${p.nombre} — ${p.med}</div>
+            <div class="meta">#${p.numeroInterno || '—'} · ${p.dir}</div>
+          </div>
+        </div>
+      `).join('')}
+      <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="confirmarLote('${loteDoc.id}')">Confirmar entrega a domiciliario</button>
+    `;
+  } catch(err){
+    console.error(err);
+    errorBox.textContent = 'Error al buscar el código: ' + err.message;
+    errorBox.classList.add('show');
+  }
+}
+
+async function confirmarLote(loteId){
+  try {
+    const loteSnap = await lotesRef.doc(loteId).get();
+    if(!loteSnap.exists) return;
+    const lote = loteSnap.data();
+
+    await lotesRef.doc(loteId).update({
+      estado: 'confirmado',
+      confirmadoEn: firebase.firestore.FieldValue.serverTimestamp(),
+      confirmadoPor: auth.currentUser.uid
+    });
+
+    await Promise.all(lote.pedidoIds.map(id => pedidosRef.doc(id).update({
+      recogidoEn: firebase.firestore.FieldValue.serverTimestamp()
+    })));
+
+    document.getElementById('lote-codigo').value = '';
+    document.getElementById('lote-resultado').innerHTML = '<div class="empty-state">Entrega confirmada correctamente.</div>';
+  } catch(err){
+    console.error(err);
+    alert('No se pudo confirmar la entrega: ' + err.message);
+  }
 }
 
 // El domiciliario marca la entrega como completada.
@@ -2520,11 +2737,12 @@ function renderFarmacia(){
       <div class="order-row">
         <div class="order-info">
           <div class="name">${p.nombre} — ${p.med}</div>
-          <div class="meta">${p.dir} · ${p.codigo}</div>
+          <div class="meta">${p.dir} · ${p.codigo} ${p.numeroInterno ? `· <strong>#${p.numeroInterno}</strong>` : ''}</div>
           ${p.prescripcion ? `<div class="meta" style="margin-top:4px;"><strong>Indicaciones:</strong> ${p.prescripcion}</div>` : ''}
         </div>
         <span class="tag ${tagClass(p.status)}">${tagLabel(p.status)}</span>
         ${p.status==='autorizado' ? `<button class="btn btn-accent" onclick="despachar('${p.id}')">Alistar para domiciliario</button>` : ''}
+        ${p.numeroInterno ? `<button class="btn btn-ghost btn-sm" onclick="imprimirSticker('${p.id}')">Imprimir sticker</button>` : ''}
       </div>
     `).join('');
     return `<div class="zone-heading">${zona}</div>${filas}`;
@@ -2560,16 +2778,31 @@ function renderDomiciliario(){
   if(disponibles.length === 0){
     disponiblesList.innerHTML = '<div class="empty-state">No hay pedidos disponibles en tu zona en este momento.</div>';
   } else {
-    disponiblesList.innerHTML = disponibles.map(p => `
-      <div class="order-row">
-        <div class="order-info">
-          <div class="name">${p.nombre} — ${p.med}</div>
-          <div class="meta">${p.dir} · ${p.codigo} · Tel: ${p.tel}</div>
-        </div>
-        <button class="btn btn-accent" onclick="tomarPedido('${p.id}')">Tomar pedido</button>
+    disponiblesList.innerHTML = `
+      <div class="order-row" style="border-bottom:1px dashed var(--line);">
+        <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;cursor:pointer;">
+          <input type="checkbox" onchange="seleccionarTodosLote(this.checked)"> Seleccionar todos
+        </label>
       </div>
-    `).join('');
+      ${disponibles.map(p => `
+      <div class="order-row">
+        <label style="display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;">
+          <input type="checkbox" class="chk-lote" data-id="${p.id}" ${loteSeleccionados.has(p.id)?'checked':''} onchange="toggleSeleccionLote('${p.id}', this.checked)">
+          <div class="order-info">
+            <div class="name">${p.nombre} — ${p.med}</div>
+            <div class="meta">${p.dir} · ${p.codigo} · Tel: ${p.tel} ${p.numeroInterno ? `· #${p.numeroInterno}` : ''}</div>
+          </div>
+        </label>
+      </div>
+      `).join('')}
+      <div style="margin-top:14px;">
+        <button class="btn btn-primary" id="btn-generar-lote" style="width:100%;" disabled onclick="generarLote()">Selecciona pedidos para generar un código</button>
+      </div>
+    `;
+    actualizarBotonGenerarLote();
   }
+
+  cargarMisLotesPendientes();
 
   if(enCurso.length === 0){
     cursoList.innerHTML = '<div class="empty-state">No tienes entregas en curso.</div>';
@@ -2578,7 +2811,7 @@ function renderDomiciliario(){
       <div class="order-row">
         <div class="order-info">
           <div class="name">${p.nombre} — ${p.med}</div>
-          <div class="meta">${p.dir} · ${p.codigo} · Tel: ${p.tel}</div>
+          <div class="meta">${p.dir} · ${p.codigo} · Tel: ${p.tel} ${p.recogidoEn ? '· Recogido en farmacia' : '· Pendiente por recoger en farmacia'}</div>
         </div>
         <button class="btn btn-primary" onclick="entregarDomiciliario('${p.id}')">Marcar entregado</button>
       </div>
