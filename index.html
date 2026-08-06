@@ -2851,8 +2851,8 @@ function renderEPS(){
 }
 
 // Mostrar pestañas de staff solo con acceso especial (?staff=1 en la URL).
-// ?domiciliario=1 e ?institucion=1 son links aparte, seguros de compartir públicamente
-// para reclutar: cada uno solo revela su propia pestaña (no expone las demás).
+// ?domiciliario=1, ?institucion=1 y ?consultorio=1 son links aparte, seguros de
+// compartir públicamente: cada uno solo revela su propia pestaña.
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('staff') === '1') {
   document.querySelectorAll('.staff-tab').forEach(el => el.classList.remove('staff-tab'));
@@ -2873,6 +2873,15 @@ if (urlParams.get('staff') === '1') {
     instBtn.classList.add('active');
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.getElementById('view-institucion').classList.add('active');
+  }
+} else if (urlParams.get('consultorio') === '1') {
+  const medBtn = document.querySelector('.role-tabs button[data-role="medico"]');
+  if(medBtn){
+    medBtn.classList.remove('staff-tab');
+    document.querySelectorAll('.role-tabs button').forEach(b=>b.classList.remove('active'));
+    medBtn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-medico').classList.add('active');
   }
 }
 renderAll();
