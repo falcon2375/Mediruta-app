@@ -16,7 +16,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/JsBarcode/3.11.5/JsBarcode.all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
 
@@ -659,6 +659,17 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
           </svg>
         </button>
       </div>
+      <label>Confirmar contraseña</label>
+      <div class="pass-field">
+        <input type="password" id="ri-pass2" placeholder="Repite la contraseña">
+        <button type="button" class="pass-toggle" onclick="togglePass('ri-pass2', this)" aria-label="Mostrar contraseña">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+            <circle cx="12" cy="12" r="3"/>
+            <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+          </svg>
+        </button>
+      </div>
       <div class="login-error" id="ri-error"></div>
       <div style="margin-top:16px;">
         <button class="btn btn-primary" style="width:100%;" onclick="registrarInstitucion()">Enviar solicitud</button>
@@ -704,6 +715,17 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
         <div class="pass-field">
           <input type="password" id="ic-pass" placeholder="Mínimo 6 caracteres">
           <button type="button" class="pass-toggle" onclick="togglePass('ic-pass', this)" aria-label="Mostrar contraseña">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+            </svg>
+          </button>
+        </div>
+        <label>Confirmar contraseña</label>
+        <div class="pass-field">
+          <input type="password" id="ic-pass2" placeholder="Repite la contraseña">
+          <button type="button" class="pass-toggle" onclick="togglePass('ic-pass2', this)" aria-label="Mostrar contraseña">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
               <circle cx="12" cy="12" r="3"/>
@@ -818,6 +840,17 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
       <div class="pass-field">
         <input type="password" id="rd-pass" placeholder="Mínimo 6 caracteres">
         <button type="button" class="pass-toggle" onclick="togglePass('rd-pass', this)" aria-label="Mostrar contraseña">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+            <circle cx="12" cy="12" r="3"/>
+            <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+          </svg>
+        </button>
+      </div>
+      <label>Confirmar contraseña</label>
+      <div class="pass-field">
+        <input type="password" id="rd-pass2" placeholder="Repite la contraseña">
+        <button type="button" class="pass-toggle" onclick="togglePass('rd-pass2', this)" aria-label="Mostrar contraseña">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
             <circle cx="12" cy="12" r="3"/>
@@ -1012,6 +1045,17 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
         <div class="pass-field">
           <input type="password" id="ne-pass" placeholder="Mínimo 6 caracteres">
           <button type="button" class="pass-toggle" onclick="togglePass('ne-pass', this)" aria-label="Mostrar contraseña">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+              <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+            </svg>
+          </button>
+        </div>
+        <label>Confirmar contraseña</label>
+        <div class="pass-field">
+          <input type="password" id="ne-pass2" placeholder="Repite la contraseña">
+          <button type="button" class="pass-toggle" onclick="togglePass('ne-pass2', this)" aria-label="Mostrar contraseña">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
               <circle cx="12" cy="12" r="3"/>
@@ -1520,16 +1564,22 @@ async function crearCuentaEps(){
   const nombreEps = document.getElementById('ne-eps').value;
   const email = document.getElementById('ne-email').value.trim();
   const pass = document.getElementById('ne-pass').value;
+  const pass2 = document.getElementById('ne-pass2').value;
   const errorBox = document.getElementById('ne-error');
   errorBox.classList.remove('show');
 
-  if(!nombreEps || !email || !pass){
+  if(!nombreEps || !email || !pass || !pass2){
     errorBox.textContent = 'Completa todos los campos.';
     errorBox.classList.add('show');
     return;
   }
   if(pass.length < 6){
     errorBox.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    errorBox.classList.add('show');
+    return;
+  }
+  if(pass !== pass2){
+    errorBox.textContent = 'Las contraseñas no coinciden.';
     errorBox.classList.add('show');
     return;
   }
@@ -1554,6 +1604,7 @@ async function crearCuentaEps(){
 
     document.getElementById('ne-email').value = '';
     document.getElementById('ne-pass').value = '';
+    document.getElementById('ne-pass2').value = '';
     alert('Cuenta de EPS creada correctamente.');
     cargarCuentasEps();
   } catch(err){
@@ -1602,16 +1653,22 @@ async function registrarInstitucion(){
   const tipo = document.getElementById('ri-tipo').value.trim();
   const email = document.getElementById('ri-email').value.trim();
   const pass = document.getElementById('ri-pass').value;
+  const pass2 = document.getElementById('ri-pass2').value;
   const errorBox = document.getElementById('ri-error');
   errorBox.classList.remove('show');
 
-  if(!nombre || !tipo || !email || !pass){
+  if(!nombre || !tipo || !email || !pass || !pass2){
     errorBox.textContent = 'Completa todos los campos.';
     errorBox.classList.add('show');
     return;
   }
   if(pass.length < 6){
     errorBox.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    errorBox.classList.add('show');
+    return;
+  }
+  if(pass !== pass2){
+    errorBox.textContent = 'Las contraseñas no coinciden.';
     errorBox.classList.add('show');
     return;
   }
@@ -1639,16 +1696,22 @@ async function crearConsultorioInstitucion(){
   const nombreConsultorio = document.getElementById('ic-nombre').value.trim();
   const email = document.getElementById('ic-email').value.trim();
   const pass = document.getElementById('ic-pass').value;
+  const pass2 = document.getElementById('ic-pass2').value;
   const errorBox = document.getElementById('ic-error');
   errorBox.classList.remove('show');
 
-  if(!nombreConsultorio || !email || !pass){
+  if(!nombreConsultorio || !email || !pass || !pass2){
     errorBox.textContent = 'Completa todos los campos.';
     errorBox.classList.add('show');
     return;
   }
   if(pass.length < 6){
     errorBox.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    errorBox.classList.add('show');
+    return;
+  }
+  if(pass !== pass2){
+    errorBox.textContent = 'Las contraseñas no coinciden.';
     errorBox.classList.add('show');
     return;
   }
@@ -1676,6 +1739,7 @@ async function crearConsultorioInstitucion(){
     document.getElementById('ic-nombre').value = '';
     document.getElementById('ic-email').value = '';
     document.getElementById('ic-pass').value = '';
+    document.getElementById('ic-pass2').value = '';
     alert('Consultorio creado correctamente.');
     cargarConsultoriosInstitucion();
 
@@ -1932,6 +1996,7 @@ async function cargarZonasRegistro(){
 async function registrarDomiciliario(){
   const email = document.getElementById('rd-email').value.trim();
   const pass = document.getElementById('rd-pass').value;
+  const pass2 = document.getElementById('rd-pass2').value;
   const nombre = document.getElementById('rd-nombre').value.trim();
   const cedula = document.getElementById('rd-cedula').value.trim();
   const telefono = document.getElementById('rd-telefono').value.trim();
@@ -1947,13 +2012,18 @@ async function registrarDomiciliario(){
   const errorBox = document.getElementById('rd-error');
   errorBox.classList.remove('show');
 
-  if(!email || !pass || !nombre || !cedula || !telefono || !direccion || !marca || !modelo || !color || !placa || !licencia || !soat || !tecno || !zonaSolicitada){
+  if(!email || !pass || !pass2 || !nombre || !cedula || !telefono || !direccion || !marca || !modelo || !color || !placa || !licencia || !soat || !tecno || !zonaSolicitada){
     errorBox.textContent = 'Completa todos los campos.';
     errorBox.classList.add('show');
     return;
   }
   if(pass.length < 6){
     errorBox.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    errorBox.classList.add('show');
+    return;
+  }
+  if(pass !== pass2){
+    errorBox.textContent = 'Las contraseñas no coinciden.';
     errorBox.classList.add('show');
     return;
   }
@@ -2439,10 +2509,11 @@ function imprimirSticker(id){
       <div class="num">#${p.numeroInterno || '—'}</div>
       <div class="campo"><b>Paciente</b>${p.nombre}</div>
       <div class="campo"><b>Entrega</b>${p.dir}</div>
+      <div class="campo"><b>Teléfono</b>${p.tel}</div>
       <div class="campo"><b>Zona</b>${p.zona || 'Sin definir'}</div>
       <div class="campo"><b>Código de pedido</b>${p.codigo}</div>
       <svg id="bc"></svg>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/JsBarcode/3.11.5/JsBarcode.all.min.js"><\/script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"><\/script>
       <script>
         JsBarcode("#bc", "${p.numeroInterno || p.codigo}", {format:"CODE128", width:2, height:46, displayValue:false});
         window.onload = () => window.print();
