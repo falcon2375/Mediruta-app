@@ -2587,7 +2587,7 @@ async function generarLote(){
 
 async function cargarMisLotesPendientes(){
   const cont = document.getElementById('domiciliario-lotes-pendientes');
-  if(!cont || !auth.currentUser) return;
+  if(!cont || !auth.currentUser || !rolActual.domiciliario) return;
   const snap = await lotesRef
     .where('domiciliarioId','==',auth.currentUser.uid)
     .where('estado','==','generado')
@@ -2827,7 +2827,10 @@ function renderFarmacia(){
 function renderDomiciliario(){
   const disponiblesList = document.getElementById('domiciliario-disponibles-list');
   const cursoList = document.getElementById('domiciliario-curso-list');
-  if(!disponiblesList || !cursoList || !auth.currentUser) return;
+  // Estos elementos siempre existen en el DOM (aunque estén ocultos), así que
+  // verificar solo su existencia no basta: hay que confirmar que la sesión
+  // activa realmente es de un domiciliario antes de consultar sus lotes.
+  if(!disponiblesList || !cursoList || !auth.currentUser || !rolActual.domiciliario) return;
 
   const disponibles = pedidos.filter(p =>
     p.status === 'transito' && !p.domiciliarioId && p.zona === domiciliarioZona
