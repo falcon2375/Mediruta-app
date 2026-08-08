@@ -772,12 +772,59 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
         <div style="margin-top:18px;">
           <button class="btn btn-primary" style="width:100%;" onclick="loginRol('farmacia')">Ingresar</button>
         </div>
+        <p class="sub" style="margin-top:16px;text-align:center;">
+          ¿Aún no tienes cuenta? <a href="#" onclick="mostrarRegistroFarmacia();return false;" style="color:var(--accent);font-weight:600;">Regístrate aquí</a>
+        </p>
       </div>
+    </div>
+
+    <div class="card" id="farmacia-registro" style="display:none;max-width:480px;margin:0 auto;">
+      <h2>Registro de farmacia</h2>
+      <p class="sub">Tu cuenta quedará pendiente de aprobación hasta que el administrador la active.</p>
+      <label>Nombre de la farmacia</label>
+      <input type="text" id="rf-nombre" placeholder="Ej. Droguería San Rafael">
+      <label>Correo</label>
+      <input type="email" id="rf-email" placeholder="contacto@farmacia.com">
+      <label>Contraseña</label>
+      <div class="pass-field">
+        <input type="password" id="rf-pass" placeholder="Mínimo 6 caracteres">
+        <button type="button" class="pass-toggle" onclick="togglePass('rf-pass', this)" aria-label="Mostrar contraseña">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+            <circle cx="12" cy="12" r="3"/>
+            <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+          </svg>
+        </button>
+      </div>
+      <label>Confirmar contraseña</label>
+      <div class="pass-field">
+        <input type="password" id="rf-pass2" placeholder="Repite la contraseña">
+        <button type="button" class="pass-toggle" onclick="togglePass('rf-pass2', this)" aria-label="Mostrar contraseña">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+            <circle cx="12" cy="12" r="3"/>
+            <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+          </svg>
+        </button>
+      </div>
+      <div class="login-error" id="rf-error"></div>
+      <div style="margin-top:16px;">
+        <button class="btn btn-primary" style="width:100%;" onclick="registrarFarmacia()">Enviar solicitud</button>
+      </div>
+      <p class="sub" style="margin-top:16px;text-align:center;">
+        ¿Ya tienes cuenta? <a href="#" onclick="mostrarLoginFarmacia();return false;" style="color:var(--accent);font-weight:600;">Inicia sesión</a>
+      </p>
+    </div>
+
+    <div class="card" id="farmacia-pendiente" style="display:none;max-width:480px;margin:0 auto;">
+      <h2 id="fp-titulo">Solicitud en revisión</h2>
+      <p class="sub" id="fp-mensaje">Tu solicitud está siendo revisada por el administrador. Te avisaremos cuando quede activa.</p>
+      <button class="btn btn-ghost" style="width:100%;" onclick="logout('farmacia')">Cerrar sesión</button>
     </div>
 
     <div id="farmacia-content" style="display:none;">
       <div class="session-bar">
-        <span class="who">Conectado como <span id="farmacia-email-label"></span></span>
+        <span class="who">Conectado como <span id="farmacia-email-label"></span> · <strong id="farmacia-nombre-label"></strong></span>
         <button onclick="logout('farmacia')">Cerrar sesión</button>
       </div>
 
@@ -793,7 +840,7 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
       </div>
 
       <div class="card">
-        <h2>Bandeja de pedidos — Droguería San Rafael</h2>
+        <h2>Bandeja de pedidos</h2>
         <p class="sub">Pedidos ya autorizados por la EPS, agrupados por zona de entrega para que los alistes con anticipación.</p>
         <div id="farmacia-list"></div>
       </div>
@@ -949,7 +996,54 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
         <div style="margin-top:18px;">
           <button class="btn btn-primary" style="width:100%;" onclick="loginRol('eps')">Ingresar</button>
         </div>
+        <p class="sub" style="margin-top:16px;text-align:center;">
+          ¿Aún no tienes cuenta? <a href="#" onclick="mostrarRegistroEps();return false;" style="color:var(--accent);font-weight:600;">Regístrate aquí</a>
+        </p>
       </div>
+    </div>
+
+    <div class="card" id="eps-registro" style="display:none;max-width:480px;margin:0 auto;">
+      <h2>Registro de EPS</h2>
+      <p class="sub">Tu cuenta quedará pendiente de aprobación hasta que el administrador la active.</p>
+      <label>EPS</label>
+      <select id="re-eps"></select>
+      <label>Correo</label>
+      <input type="email" id="re-email" placeholder="contacto@eps.com">
+      <label>Contraseña</label>
+      <div class="pass-field">
+        <input type="password" id="re-pass" placeholder="Mínimo 6 caracteres">
+        <button type="button" class="pass-toggle" onclick="togglePass('re-pass', this)" aria-label="Mostrar contraseña">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+            <circle cx="12" cy="12" r="3"/>
+            <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+          </svg>
+        </button>
+      </div>
+      <label>Confirmar contraseña</label>
+      <div class="pass-field">
+        <input type="password" id="re-pass2" placeholder="Repite la contraseña">
+        <button type="button" class="pass-toggle" onclick="togglePass('re-pass2', this)" aria-label="Mostrar contraseña">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+            <circle cx="12" cy="12" r="3"/>
+            <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
+          </svg>
+        </button>
+      </div>
+      <div class="login-error" id="re-error"></div>
+      <div style="margin-top:16px;">
+        <button class="btn btn-primary" style="width:100%;" onclick="registrarEps()">Enviar solicitud</button>
+      </div>
+      <p class="sub" style="margin-top:16px;text-align:center;">
+        ¿Ya tienes cuenta? <a href="#" onclick="mostrarLoginEps();return false;" style="color:var(--accent);font-weight:600;">Inicia sesión</a>
+      </p>
+    </div>
+
+    <div class="card" id="eps-pendiente" style="display:none;max-width:480px;margin:0 auto;">
+      <h2 id="ep-titulo">Solicitud en revisión</h2>
+      <p class="sub" id="ep-mensaje">Tu solicitud está siendo revisada por el administrador. Te avisaremos cuando quede activa.</p>
+      <button class="btn btn-ghost" style="width:100%;" onclick="logout('eps')">Cerrar sesión</button>
     </div>
 
     <div id="eps-content" style="display:none;">
@@ -1035,43 +1129,24 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
       </div>
 
       <div class="card">
-        <h2>Crear cuenta de EPS</h2>
+        <h2>Solicitudes de EPS pendientes</h2>
         <p class="sub">Cada EPS solo verá y autorizará los pedidos de sus propios afiliados.</p>
-        <label>EPS</label>
-        <select id="ne-eps"></select>
-        <label>Correo de la cuenta</label>
-        <input type="email" id="ne-email" placeholder="Ej. sura@farmaruta.com">
-        <label>Contraseña</label>
-        <div class="pass-field">
-          <input type="password" id="ne-pass" placeholder="Mínimo 6 caracteres">
-          <button type="button" class="pass-toggle" onclick="togglePass('ne-pass', this)" aria-label="Mostrar contraseña">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
-              <circle cx="12" cy="12" r="3"/>
-              <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
-            </svg>
-          </button>
-        </div>
-        <label>Confirmar contraseña</label>
-        <div class="pass-field">
-          <input type="password" id="ne-pass2" placeholder="Repite la contraseña">
-          <button type="button" class="pass-toggle" onclick="togglePass('ne-pass2', this)" aria-label="Mostrar contraseña">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
-              <circle cx="12" cy="12" r="3"/>
-              <line class="slash" x1="3" y1="3" x2="21" y2="21" style="display:none;"/>
-            </svg>
-          </button>
-        </div>
-        <div class="login-error" id="ne-error"></div>
-        <div style="margin-top:16px;">
-          <button class="btn btn-primary" style="width:100%;" onclick="crearCuentaEps()">Crear cuenta EPS</button>
-        </div>
+        <div id="administrador-eps-pendientes-list"></div>
       </div>
 
       <div class="card">
-        <h2>Cuentas EPS registradas</h2>
+        <h2>Cuentas EPS activas</h2>
         <div id="administrador-eps-cuentas-list"></div>
+      </div>
+
+      <div class="card">
+        <h2>Solicitudes de farmacias pendientes</h2>
+        <div id="administrador-farmacias-pendientes-list"></div>
+      </div>
+
+      <div class="card">
+        <h2>Farmacias activas</h2>
+        <div id="administrador-farmacias-activas-list"></div>
       </div>
 
       <div class="card">
@@ -1161,6 +1236,7 @@ const epsRef = db.collection('eps');
 const epsCuentasRef = db.collection('eps_cuentas');
 const institucionesRef = db.collection('instituciones');
 const lotesRef = db.collection('lotes');
+const farmaciasRef = db.collection('farmacias');
 let confirmationResult = null;
 let pacienteCedula = null;
 let pacienteDireccion = null;
@@ -1169,6 +1245,7 @@ let domiciliarioZona = null;
 let miEpsNombre = null;
 let miInstitucionId = null;
 let miInstitucionNombre = null;
+let miFarmaciaNombre = null;
 let zonasCache = [];
 
 const ROLES_STAFF = ['farmacia','eps','medico','administrador','domiciliario','institucion'];
@@ -1189,6 +1266,14 @@ auth.onAuthStateChanged((user) => {
     if(instReg) instReg.style.display = 'none';
     const instPend = document.getElementById('institucion-pendiente');
     if(instPend) instPend.style.display = 'none';
+    const epsReg = document.getElementById('eps-registro');
+    if(epsReg) epsReg.style.display = 'none';
+    const epsPend = document.getElementById('eps-pendiente');
+    if(epsPend) epsPend.style.display = 'none';
+    const farmReg = document.getElementById('farmacia-registro');
+    if(farmReg) farmReg.style.display = 'none';
+    const farmPend = document.getElementById('farmacia-pendiente');
+    if(farmPend) farmPend.style.display = 'none';
     detenerEscuchaStaff();
     return;
   }
@@ -1240,9 +1325,66 @@ rolesRef.doc(user.uid).get().then(async (doc) => {
       }
 
       if(rol === 'eps'){
+        // Una cuenta de EPS "pendiente" o "rechazada" no ve el panel de autorización,
+        // solo una pantalla informando el estado de su solicitud.
+        if(data.estado !== 'activo'){
+          document.getElementById('eps-login').style.display = 'none';
+          const reg = document.getElementById('eps-registro');
+          if(reg) reg.style.display = 'none';
+          document.getElementById('eps-content').style.display = 'none';
+          const pendiente = document.getElementById('eps-pendiente');
+          if(pendiente){
+            pendiente.style.display = 'block';
+            const titulo = document.getElementById('ep-titulo');
+            const mensaje = document.getElementById('ep-mensaje');
+            if(data.estado === 'rechazado'){
+              titulo.textContent = 'Solicitud rechazada';
+              mensaje.textContent = 'Tu solicitud no fue aprobada. Si crees que es un error, contacta al administrador.';
+            } else {
+              titulo.textContent = 'Solicitud en revisión';
+              mensaje.textContent = 'Tu solicitud está siendo revisada por el administrador. Te avisaremos cuando quede activa.';
+            }
+          }
+          return;
+        }
+        const pendienteOk = document.getElementById('eps-pendiente');
+        if(pendienteOk) pendienteOk.style.display = 'none';
+
         miEpsNombre = data.eps || null;
         const label = document.getElementById('eps-nombre-label');
         if(label) label.textContent = miEpsNombre || 'Sin EPS asignada';
+      }
+
+      if(rol === 'farmacia'){
+        // Una cuenta de farmacia "pendiente" o "rechazada" no ve el panel de pedidos,
+        // solo una pantalla informando el estado de su solicitud.
+        if(data.estado !== 'activo'){
+          document.getElementById('farmacia-login').style.display = 'none';
+          const reg = document.getElementById('farmacia-registro');
+          if(reg) reg.style.display = 'none';
+          document.getElementById('farmacia-content').style.display = 'none';
+          const pendiente = document.getElementById('farmacia-pendiente');
+          if(pendiente){
+            pendiente.style.display = 'block';
+            const titulo = document.getElementById('fp-titulo');
+            const mensaje = document.getElementById('fp-mensaje');
+            if(data.estado === 'rechazado'){
+              titulo.textContent = 'Solicitud rechazada';
+              mensaje.textContent = 'Tu solicitud no fue aprobada. Si crees que es un error, contacta al administrador.';
+            } else {
+              titulo.textContent = 'Solicitud en revisión';
+              mensaje.textContent = 'Tu solicitud está siendo revisada por el administrador. Te avisaremos cuando quede activa.';
+            }
+          }
+          return;
+        }
+        const pendienteOk = document.getElementById('farmacia-pendiente');
+        if(pendienteOk) pendienteOk.style.display = 'none';
+
+        const farmSnap = await farmaciasRef.doc(user.uid).get();
+        miFarmaciaNombre = farmSnap.exists ? farmSnap.data().nombre : user.email;
+        const nombreLabel = document.getElementById('farmacia-nombre-label');
+        if(nombreLabel) nombreLabel.textContent = miFarmaciaNombre;
       }
 
       if(rol === 'institucion'){
@@ -1303,8 +1445,8 @@ rolesRef.doc(user.uid).get().then(async (doc) => {
         cargarConsultorios();
         cargarDomiciliarios();
         cargarEpsAdmin();
-        cargarEpsSelectAdmin();
-        cargarCuentasEps();
+        cargarEpsCuentasAdmin();
+        cargarFarmaciasAdmin();
         cargarInstituciones();
       }
     }
@@ -1549,23 +1691,36 @@ async function cargarEpsOpciones(){
 }
 
 // ---------- Administrador: crear cuentas de EPS (cada una ligada a una EPS específica) ----------
-async function cargarEpsSelectAdmin(){
-  const select = document.getElementById('ne-eps');
+// ---------- EPS: registro propio (queda pendiente de aprobación) ----------
+function mostrarRegistroEps(){
+  document.getElementById('eps-login').style.display = 'none';
+  document.getElementById('eps-registro').style.display = 'block';
+  cargarEpsOpcionesRegistro();
+}
+
+function mostrarLoginEps(){
+  document.getElementById('eps-registro').style.display = 'none';
+  document.getElementById('eps-login').style.display = 'block';
+}
+
+// Llena el <select> de EPS en el formulario de registro (lectura pública).
+async function cargarEpsOpcionesRegistro(){
+  const select = document.getElementById('re-eps');
   if(!select) return;
   const snap = await epsRef.orderBy('nombre').get();
   if(snap.empty){
-    select.innerHTML = '<option value="">Primero agrega una EPS en "EPS de la red"</option>';
+    select.innerHTML = '<option value="">Aún no hay EPS registradas, contacta al administrador</option>';
     return;
   }
   select.innerHTML = snap.docs.map(d => `<option>${d.data().nombre}</option>`).join('');
 }
 
-async function crearCuentaEps(){
-  const nombreEps = document.getElementById('ne-eps').value;
-  const email = document.getElementById('ne-email').value.trim();
-  const pass = document.getElementById('ne-pass').value;
-  const pass2 = document.getElementById('ne-pass2').value;
-  const errorBox = document.getElementById('ne-error');
+async function registrarEps(){
+  const nombreEps = document.getElementById('re-eps').value;
+  const email = document.getElementById('re-email').value.trim();
+  const pass = document.getElementById('re-pass').value;
+  const pass2 = document.getElementById('re-pass2').value;
+  const errorBox = document.getElementById('re-error');
   errorBox.classList.remove('show');
 
   if(!nombreEps || !email || !pass || !pass2){
@@ -1584,57 +1739,189 @@ async function crearCuentaEps(){
     return;
   }
 
-  let secondaryApp = null;
   try {
-    secondaryApp = firebase.initializeApp(firebaseConfig, 'SecondaryEps');
-    try {
-      const cred = await secondaryApp.auth().createUserWithEmailAndPassword(email, pass);
-      const nuevoUid = cred.user.uid;
-      await secondaryApp.auth().signOut();
+    const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+    const uid = cred.user.uid;
 
-      await rolesRef.doc(nuevoUid).set({ role: 'eps', eps: nombreEps });
-      await epsCuentasRef.doc(nuevoUid).set({
-        eps: nombreEps, email,
-        creado: firebase.firestore.FieldValue.serverTimestamp(),
-        creadoPor: auth.currentUser.uid
-      });
-    } finally {
-      await secondaryApp.delete();
-    }
-
-    document.getElementById('ne-email').value = '';
-    document.getElementById('ne-pass').value = '';
-    document.getElementById('ne-pass2').value = '';
-    alert('Cuenta de EPS creada correctamente.');
-    cargarCuentasEps();
+    await rolesRef.doc(uid).set({ role: 'eps', eps: nombreEps, estado: 'pendiente' });
+    await epsCuentasRef.doc(uid).set({
+      eps: nombreEps, email,
+      estado: 'pendiente',
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // El listener de auth.onAuthStateChanged se encarga de mostrar la pantalla "pendiente".
   } catch(err){
     console.error(err);
-    errorBox.textContent = 'Error: ' + err.message;
+    errorBox.textContent = 'No se pudo completar el registro: ' + err.message;
     errorBox.classList.add('show');
   }
 }
 
-async function cargarCuentasEps(){
-  const lista = document.getElementById('administrador-eps-cuentas-list');
-  if(!lista) return;
-  const snap = await epsCuentasRef.orderBy('creado','desc').get();
+// ---------- Administrador: aprobar / rechazar solicitudes de EPS ----------
+async function cargarEpsCuentasAdmin(){
+  const pendientesList = document.getElementById('administrador-eps-pendientes-list');
+  const activasList = document.getElementById('administrador-eps-cuentas-list');
+  if(!pendientesList || !activasList) return;
 
-  if(snap.empty){
-    lista.innerHTML = '<div class="empty-state">Aún no has creado ninguna cuenta de EPS.</div>';
+  const snap = await epsCuentasRef.orderBy('creado','desc').get();
+  const todas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const pendientes = todas.filter(e => e.estado === 'pendiente');
+  const activas = todas.filter(e => e.estado === 'activo');
+
+  if(pendientes.length === 0){
+    pendientesList.innerHTML = '<div class="empty-state">No hay solicitudes pendientes.</div>';
+  } else {
+    pendientesList.innerHTML = pendientes.map(e => `
+      <div class="order-row">
+        <div class="order-info">
+          <div class="name">${e.eps}</div>
+          <div class="meta">${e.email}</div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-accent btn-sm" onclick="aprobarEps('${e.id}')">Aprobar</button>
+          <button class="btn btn-ghost btn-sm" onclick="rechazarEps('${e.id}')">Rechazar</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  if(activas.length === 0){
+    activasList.innerHTML = '<div class="empty-state">Aún no tienes cuentas de EPS activas.</div>';
+  } else {
+    activasList.innerHTML = activas.map(e => `
+      <div class="order-row">
+        <div class="order-info">
+          <div class="name">${e.eps}</div>
+          <div class="meta">${e.email}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+async function aprobarEps(uid){
+  await rolesRef.doc(uid).update({ estado: 'activo' });
+  await epsCuentasRef.doc(uid).update({ estado: 'activo' });
+  alert('Cuenta de EPS aprobada.');
+  cargarEpsCuentasAdmin();
+}
+
+async function rechazarEps(uid){
+  if(!confirm('¿Rechazar esta solicitud?')) return;
+  await rolesRef.doc(uid).update({ estado: 'rechazado' });
+  await epsCuentasRef.doc(uid).update({ estado: 'rechazado' });
+  cargarEpsCuentasAdmin();
+}
+
+// ---------- Farmacia: registro propio (queda pendiente de aprobación) ----------
+function mostrarRegistroFarmacia(){
+  document.getElementById('farmacia-login').style.display = 'none';
+  document.getElementById('farmacia-registro').style.display = 'block';
+}
+
+function mostrarLoginFarmacia(){
+  document.getElementById('farmacia-registro').style.display = 'none';
+  document.getElementById('farmacia-login').style.display = 'block';
+}
+
+async function registrarFarmacia(){
+  const nombre = document.getElementById('rf-nombre').value.trim();
+  const email = document.getElementById('rf-email').value.trim();
+  const pass = document.getElementById('rf-pass').value;
+  const pass2 = document.getElementById('rf-pass2').value;
+  const errorBox = document.getElementById('rf-error');
+  errorBox.classList.remove('show');
+
+  if(!nombre || !email || !pass || !pass2){
+    errorBox.textContent = 'Completa todos los campos.';
+    errorBox.classList.add('show');
+    return;
+  }
+  if(pass.length < 6){
+    errorBox.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    errorBox.classList.add('show');
+    return;
+  }
+  if(pass !== pass2){
+    errorBox.textContent = 'Las contraseñas no coinciden.';
+    errorBox.classList.add('show');
     return;
   }
 
-  lista.innerHTML = snap.docs.map(doc => {
-    const d = doc.data();
-    return `
+  try {
+    const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+    const uid = cred.user.uid;
+
+    await rolesRef.doc(uid).set({ role: 'farmacia', estado: 'pendiente' });
+    await farmaciasRef.doc(uid).set({
+      nombre, email,
+      estado: 'pendiente',
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // El listener de auth.onAuthStateChanged se encarga de mostrar la pantalla "pendiente".
+  } catch(err){
+    console.error(err);
+    errorBox.textContent = 'No se pudo completar el registro: ' + err.message;
+    errorBox.classList.add('show');
+  }
+}
+
+// ---------- Administrador: aprobar / rechazar solicitudes de farmacias ----------
+async function cargarFarmaciasAdmin(){
+  const pendientesList = document.getElementById('administrador-farmacias-pendientes-list');
+  const activasList = document.getElementById('administrador-farmacias-activas-list');
+  if(!pendientesList || !activasList) return;
+
+  const snap = await farmaciasRef.orderBy('creado','desc').get();
+  const todas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const pendientes = todas.filter(f => f.estado === 'pendiente');
+  const activas = todas.filter(f => f.estado === 'activo');
+
+  if(pendientes.length === 0){
+    pendientesList.innerHTML = '<div class="empty-state">No hay solicitudes pendientes.</div>';
+  } else {
+    pendientesList.innerHTML = pendientes.map(f => `
       <div class="order-row">
         <div class="order-info">
-          <div class="name">${d.eps}</div>
-          <div class="meta">${d.email}</div>
+          <div class="name">${f.nombre}</div>
+          <div class="meta">${f.email}</div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-accent btn-sm" onclick="aprobarFarmacia('${f.id}')">Aprobar</button>
+          <button class="btn btn-ghost btn-sm" onclick="rechazarFarmacia('${f.id}')">Rechazar</button>
         </div>
       </div>
-    `;
-  }).join('');
+    `).join('');
+  }
+
+  if(activas.length === 0){
+    activasList.innerHTML = '<div class="empty-state">Aún no tienes farmacias activas.</div>';
+  } else {
+    activasList.innerHTML = activas.map(f => `
+      <div class="order-row">
+        <div class="order-info">
+          <div class="name">${f.nombre}</div>
+          <div class="meta">${f.email}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+async function aprobarFarmacia(uid){
+  await rolesRef.doc(uid).update({ estado: 'activo' });
+  await farmaciasRef.doc(uid).update({ estado: 'activo' });
+  alert('Farmacia aprobada.');
+  cargarFarmaciasAdmin();
+}
+
+async function rechazarFarmacia(uid){
+  if(!confirm('¿Rechazar esta solicitud?')) return;
+  await rolesRef.doc(uid).update({ estado: 'rechazado' });
+  await farmaciasRef.doc(uid).update({ estado: 'rechazado' });
+  cargarFarmaciasAdmin();
 }
 
 // ---------- Lugar de atención: registro propio (queda pendiente de aprobación) ----------
@@ -2925,8 +3212,8 @@ function renderEPS(){
 }
 
 // Mostrar pestañas de staff solo con acceso especial (?staff=1 en la URL).
-// ?domiciliario=1, ?institucion=1 y ?consultorio=1 son links aparte, seguros de
-// compartir públicamente: cada uno solo revela su propia pestaña.
+// ?domiciliario=1, ?institucion=1, ?consultorio=1, ?farmacia=1 y ?eps=1 son links
+// aparte, seguros de compartir públicamente: cada uno solo revela su propia pestaña.
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('staff') === '1') {
   document.querySelectorAll('.staff-tab').forEach(el => el.classList.remove('staff-tab'));
@@ -2956,6 +3243,24 @@ if (urlParams.get('staff') === '1') {
     medBtn.classList.add('active');
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.getElementById('view-medico').classList.add('active');
+  }
+} else if (urlParams.get('farmacia') === '1') {
+  const farmBtn = document.querySelector('.role-tabs button[data-role="farmacia"]');
+  if(farmBtn){
+    farmBtn.classList.remove('staff-tab');
+    document.querySelectorAll('.role-tabs button').forEach(b=>b.classList.remove('active'));
+    farmBtn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-farmacia').classList.add('active');
+  }
+} else if (urlParams.get('eps') === '1') {
+  const epsBtn = document.querySelector('.role-tabs button[data-role="eps"]');
+  if(epsBtn){
+    epsBtn.classList.remove('staff-tab');
+    document.querySelectorAll('.role-tabs button').forEach(b=>b.classList.remove('active'));
+    epsBtn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-eps').classList.add('active');
   }
 }
 renderAll();
