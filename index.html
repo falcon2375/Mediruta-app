@@ -2467,12 +2467,28 @@ if(pedidoActivoPaciente){
   iniciarEscuchaPaciente(pedidoActivoPaciente);
 }
 
+// Cambia el título de la pestaña del navegador según el rol activo, para
+// distinguir fácilmente varias pestañas de FarmaRuta abiertas a la vez.
+const TITULOS_ROL = {
+  paciente: 'Paciente',
+  medico: 'Consultorio',
+  institucion: 'Lugar de atención',
+  farmacia: 'Farmacia',
+  domiciliario: 'Domiciliario',
+  eps: 'EPS',
+  administrador: 'Admin'
+};
+function actualizarTitulo(rol){
+  document.title = 'FarmaRuta · ' + (TITULOS_ROL[rol] || rol);
+}
+
 document.querySelectorAll('.role-tabs button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.role-tabs button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.getElementById('view-' + btn.dataset.role).classList.add('active');
+    actualizarTitulo(btn.dataset.role);
     renderAll();
   });
 });
@@ -3217,6 +3233,7 @@ function renderEPS(){
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('staff') === '1') {
   document.querySelectorAll('.staff-tab').forEach(el => el.classList.remove('staff-tab'));
+  actualizarTitulo('paciente');
 } else if (urlParams.get('domiciliario') === '1') {
   const domBtn = document.querySelector('.role-tabs button[data-role="domiciliario"]');
   if(domBtn){
@@ -3225,6 +3242,7 @@ if (urlParams.get('staff') === '1') {
     domBtn.classList.add('active');
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.getElementById('view-domiciliario').classList.add('active');
+    actualizarTitulo('domiciliario');
   }
 } else if (urlParams.get('institucion') === '1') {
   const instBtn = document.querySelector('.role-tabs button[data-role="institucion"]');
@@ -3234,6 +3252,7 @@ if (urlParams.get('staff') === '1') {
     instBtn.classList.add('active');
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.getElementById('view-institucion').classList.add('active');
+    actualizarTitulo('institucion');
   }
 } else if (urlParams.get('consultorio') === '1') {
   const medBtn = document.querySelector('.role-tabs button[data-role="medico"]');
@@ -3243,6 +3262,7 @@ if (urlParams.get('staff') === '1') {
     medBtn.classList.add('active');
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.getElementById('view-medico').classList.add('active');
+    actualizarTitulo('medico');
   }
 } else if (urlParams.get('farmacia') === '1') {
   const farmBtn = document.querySelector('.role-tabs button[data-role="farmacia"]');
@@ -3252,6 +3272,7 @@ if (urlParams.get('staff') === '1') {
     farmBtn.classList.add('active');
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.getElementById('view-farmacia').classList.add('active');
+    actualizarTitulo('farmacia');
   }
 } else if (urlParams.get('eps') === '1') {
   const epsBtn = document.querySelector('.role-tabs button[data-role="eps"]');
@@ -3261,7 +3282,10 @@ if (urlParams.get('staff') === '1') {
     epsBtn.classList.add('active');
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.getElementById('view-eps').classList.add('active');
+    actualizarTitulo('eps');
   }
+} else {
+  actualizarTitulo('paciente');
 }
 renderAll();
 
