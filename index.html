@@ -1301,6 +1301,7 @@ auth.onAuthStateChanged((user) => {
     miFarmaciaNombre = null;
     miFarmaciaDireccion = null;
     farmaciaEpsAutorizadas = new Set();
+    epsFarmaciasCache = [];
     domiciliarioZona = null;
     actualizarSubtitulo(null);
     const domReg = document.getElementById('domiciliario-registro');
@@ -1336,6 +1337,16 @@ rolesRef.doc(user.uid).get().then(async (doc) => {
           document.getElementById('medico-login-error').classList.add('show');
           return;
         }
+        actualizarSubtitulo('Lugar de atención');
+        try {
+          const consultorioSnap = await db.collection('consultorios').doc(user.uid).get();
+          if(consultorioSnap.exists && consultorioSnap.data().institucionId){
+            const instSnap = await institucionesRef.doc(consultorioSnap.data().institucionId).get();
+            if(instSnap.exists && instSnap.data().nombre){
+              actualizarSubtitulo(instSnap.data().nombre);
+            }
+          }
+        } catch(e){ console.error('Error cargando lugar de atención del consultorio:', e); }
       }
 
       if(rol === 'domiciliario'){
@@ -2106,6 +2117,7 @@ async function agregarFarmaciaAutorizada(){
       farmaciaId: farmDoc.id,
       farmaciaEmail: farmData.email,
       farmaciaNombre: farmData.nombre,
+      farmaciaDireccion: farmData.direccion || '',
       epsId: auth.currentUser.uid,
       creado: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -2119,31 +2131,36 @@ async function agregarFarmaciaAutorizada(){
   }
 }
 
+let epsFarmaciasCache = [];
+
 async function cargarFarmaciasAutorizadas(){
   const lista = document.getElementById('eps-farmacias-list');
   const kpi = document.getElementById('kpi-farmacias-red');
   if(!lista || !miEpsNombre) return;
 
   const snap = await epsFarmaciasRef.where('eps','==',miEpsNombre).get();
+  epsFarmaciasCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   if(kpi) kpi.textContent = snap.size;
 
   if(snap.empty){
     lista.innerHTML = '<div class="empty-state">Aún no has autorizado ninguna farmacia.</div>';
+    renderEPS();
     return;
   }
 
-  lista.innerHTML = snap.docs.map(d => {
-    const f = d.data();
+  lista.innerHTML = epsFarmaciasCache.map(f => {
     return `
       <div class="order-row">
         <div class="order-info">
           <div class="name">${f.farmaciaNombre}</div>
+          <div class="meta">${f.farmaciaDireccion || 'Sin dirección registrada'}</div>
           <div class="meta">${f.farmaciaEmail}</div>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="quitarFarmaciaAutorizada('${d.id}')">Quitar</button>
+        <button class="btn btn-ghost btn-sm" onclick="quitarFarmaciaAutorizada('${f.id}')">Quitar</button>
       </div>
     `;
   }).join('');
+  renderEPS();
 }
 
 async function quitarFarmaciaAutorizada(docId){
@@ -3068,8 +3085,24 @@ firebase.auth().onAuthStateChanged(async (user) => {
   }
 });
 
-function autorizar(id){
-  pedidosRef.doc(id).update({ status: 'autorizado' });
+async function autorizar(pedidoId, farmaciaVinculoId){
+  const farmacia = epsFarmaciasCache.find(f => f.id === farmaciaVinculoId);
+  if(!farmacia){
+    alert('No se encontró esa farmacia en tu red autorizada.');
+    return;
+  }
+  try {
+    await pedidosRef.doc(pedidoId).update({
+      status: 'autorizado',
+      farmaciaAsignadaId: farmacia.farmaciaId,
+      farmaciaAsignadaNombre: farmacia.farmaciaNombre,
+      farmaciaAsignadaDireccion: farmacia.farmaciaDireccion || '',
+      farmaciaAsignadaEmail: farmacia.farmaciaEmail
+    });
+  } catch(err){
+    console.error(err);
+    alert('No se pudo autorizar el pedido: ' + err.message);
+  }
 }
 
 // Asigna un número interno consecutivo (para el sticker de seguridad) usando una
@@ -3404,13 +3437,13 @@ function renderMedico(){
 // Farmacia ve solo los pedidos de las EPS que la autorizaron, agrupados por zona.
 function renderFarmacia(){
   const list = document.getElementById('farmacia-list');
-  if(!list) return;
+  if(!list || !auth.currentUser) return;
   const visibles = pedidos.filter(p =>
     (p.status==='autorizado' || p.status==='transito' || p.status==='entregado')
-    && farmaciaEpsAutorizadas.has(p.eps)
+    && p.farmaciaAsignadaId === auth.currentUser.uid
   );
   if(visibles.length===0){
-    list.innerHTML = '<div class="empty-state">Aún no hay pedidos de EPS que te hayan autorizado. Pide a la EPS que agregue tu correo en su panel.</div>';
+    list.innerHTML = '<div class="empty-state">Aún no tienes pedidos asignados. Cuando una EPS que te haya autorizado elija tu farmacia para despachar una fórmula, aparecerá aquí.</div>';
     return;
   }
 
@@ -3537,7 +3570,22 @@ function renderEPS(){
         <div class="meta">${p.eps} · ${p.med} · ${p.codigo}</div>
         ${p.prescripcion ? `<div class="meta" style="margin-top:4px;"><strong>Indicaciones:</strong> ${p.prescripcion}</div>` : ''}
       </div>
-      <button class="btn btn-primary" onclick="autorizar('${p.id}')">Autorizar</button>
+      ${epsFarmaciasCache.length === 0 ? `
+        <span class="tag tag-pending">Sin farmacias autorizadas</span>
+      ` : `
+        <details style="position:relative;">
+          <summary class="btn btn-primary" style="list-style:none;cursor:pointer;display:inline-block;">Farmacia ▾</summary>
+          <div style="position:absolute;right:0;z-index:10;min-width:260px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 12px 30px rgba(0,0,0,0.15);margin-top:6px;">
+            ${epsFarmaciasCache.map(f => `
+              <div style="padding:10px 10px;border-bottom:1px solid var(--line);cursor:pointer;" onclick="autorizar('${p.id}','${f.id}')">
+                <div style="font-weight:600;font-size:0.85rem;">${f.farmaciaNombre}</div>
+                <div style="font-size:0.75rem;color:var(--muted);">${f.farmaciaDireccion || 'Sin dirección registrada'}</div>
+                <div style="font-size:0.75rem;color:var(--muted);">${f.farmaciaEmail}</div>
+              </div>
+            `).join('')}
+          </div>
+        </details>
+      `}
     </div>
   `).join('');
 }
