@@ -1562,13 +1562,9 @@ async function cargarConsultorios(){
       return;
     }
 
-    const filas = await Promise.all(snap.docs.map(async (doc) => {
+    lista.innerHTML = snap.docs.map((doc) => {
       const data = doc.data();
-      let bloqueado = false;
-      try {
-        const lockSnap = await db.collection('device_locks').doc(doc.id).get();
-        bloqueado = lockSnap.exists;
-      } catch(e){ console.error('Error verificando dispositivo:', e); }
+      const bloqueado = !!data.dispositivoVinculado;
       return `
         <div class="order-row">
           <div class="order-info">
@@ -1578,9 +1574,7 @@ async function cargarConsultorios(){
           ${bloqueado ? `<button class="btn btn-ghost" onclick="liberarDispositivo('${doc.id}')">Liberar PC</button>` : ''}
         </div>
       `;
-    }));
-
-    lista.innerHTML = filas.join('');
+    }).join('');
   } catch(err){
     console.error('Error cargando consultorios:', err);
     lista.innerHTML = '<div class="empty-state">No se pudieron cargar los consultorios.</div>';
@@ -1589,7 +1583,10 @@ async function cargarConsultorios(){
 
 async function liberarDispositivo(uid){
   if(!confirm('¿Liberar este consultorio? El próximo PC que use estas credenciales quedará vinculado.')) return;
-  await db.collection('device_locks').doc(uid).delete();
+  try {
+    await db.collection('device_locks').doc(uid).delete();
+  } catch(err){ console.error('Error liberando dispositivo:', err); }
+  await db.collection('consultorios').doc(uid).update({ dispositivoVinculado: false }).catch(()=>{});
   alert('Dispositivo liberado.');
   cargarConsultorios();
 }
@@ -1626,6 +1623,9 @@ async function verificarDispositivoAutorizado(user){
       deviceId,
       vinculado: firebase.firestore.FieldValue.serverTimestamp()
     });
+    db.collection('consultorios').doc(user.uid).update({
+      dispositivoVinculado: true
+    }).catch(()=>{});
     return true;
   }
 
