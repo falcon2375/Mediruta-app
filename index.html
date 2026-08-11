@@ -1513,7 +1513,11 @@ rolesRef.doc(user.uid).get().then(async (doc) => {
   });
 });
 
+let loginEnCurso = false;
+
 function loginRol(rol){
+  if(loginEnCurso) return;
+
   const email = document.getElementById(rol + '-email').value.trim();
   const pass = document.getElementById(rol + '-pass').value;
   const errorBox = document.getElementById(rol + '-login-error');
@@ -1525,46 +1529,62 @@ function loginRol(rol){
     return;
   }
 
-  auth.signInWithEmailAndPassword(email, pass).then((cred) => {
+  loginEnCurso = true;
+
+  const finalizar = () => { loginEnCurso = false; };
+
+  auth.signOut().catch(()=>{}).then(() => {
+    return auth.signInWithEmailAndPassword(email, pass);
+  }).then((cred) => {
     return rolesRef.doc(cred.user.uid).get().then((doc) => {
       if(!doc.exists || doc.data().role !== rol){
-        auth.signOut();
-        errorBox.textContent = 'Esta cuenta no tiene permisos de ' + rol + '.';
-        errorBox.classList.add('show');
+        return auth.signOut().then(() => {
+          errorBox.textContent = 'Esta cuenta no tiene permisos de ' + rol + '.';
+          errorBox.classList.add('show');
+        });
       }
     });
   }).catch((err) => {
     errorBox.textContent = 'Correo o contraseña incorrectos.';
     errorBox.classList.add('show');
     console.error(err);
-  });
+  }).finally(finalizar);
 }
 
 async function cargarConsultorios(){
   const lista = document.getElementById('administrador-consultorios-list');
-  const snap = await db.collection('consultorios').orderBy('creado','desc').get();
+  if(!lista || !auth.currentUser) return;
+  try {
+    const snap = await db.collection('consultorios').orderBy('creado','desc').get();
 
-  if(snap.empty){
-    lista.innerHTML = '<div class="empty-state">Aún no has creado ningún consultorio.</div>';
-    return;
-  }
+    if(snap.empty){
+      lista.innerHTML = '<div class="empty-state">Aún no has creado ningún consultorio.</div>';
+      return;
+    }
 
-  const filas = await Promise.all(snap.docs.map(async (doc) => {
-    const data = doc.data();
-    const lockSnap = await db.collection('device_locks').doc(doc.id).get();
-    const bloqueado = lockSnap.exists;
-    return `
-      <div class="order-row">
-        <div class="order-info">
-          <div class="name">${data.nombre}</div>
-          <div class="meta">${data.email} ${bloqueado ? '· PC vinculado' : '· Sin vincular aún'}</div>
+    const filas = await Promise.all(snap.docs.map(async (doc) => {
+      const data = doc.data();
+      let bloqueado = false;
+      try {
+        const lockSnap = await db.collection('device_locks').doc(doc.id).get();
+        bloqueado = lockSnap.exists;
+      } catch(e){ console.error('Error verificando dispositivo:', e); }
+      return `
+        <div class="order-row">
+          <div class="order-info">
+            <div class="name">${data.nombre}</div>
+            <div class="meta">${data.email} ${bloqueado ? '· PC vinculado' : '· Sin vincular aún'}</div>
+          </div>
+          ${bloqueado ? `<button class="btn btn-ghost" onclick="liberarDispositivo('${doc.id}')">Liberar PC</button>` : ''}
         </div>
-        ${bloqueado ? `<button class="btn btn-ghost" onclick="liberarDispositivo('${doc.id}')">Liberar PC</button>` : ''}
-      </div>
-    `;
-  }));
+      `;
+    }));
 
-  lista.innerHTML = filas.join('');
+    lista.innerHTML = filas.join('');
+  } catch(err){
+    console.error('Error cargando consultorios:', err);
+    lista.innerHTML = '<div class="empty-state">No se pudieron cargar los consultorios.</div>';
+  }
 }
 
 async function liberarDispositivo(uid){
@@ -1722,20 +1742,25 @@ async function borrarEps(id){
 // Lista de EPS para el panel de administración (con opción de borrar).
 async function cargarEpsAdmin(){
   const lista = document.getElementById('administrador-eps-list');
-  if(!lista) return;
-  const snap = await epsRef.orderBy('nombre').get();
+  if(!lista || !auth.currentUser) return;
+  try {
+    const snap = await epsRef.orderBy('nombre').get();
 
-  if(snap.empty){
-    lista.innerHTML = '<div class="empty-state">Aún no has agregado ninguna EPS.</div>';
-    return;
+    if(snap.empty){
+      lista.innerHTML = '<div class="empty-state">Aún no has agregado ninguna EPS.</div>';
+      return;
+    }
+
+    lista.innerHTML = snap.docs.map(d => `
+      <div class="order-row">
+        <div class="order-info"><div class="name">${d.data().nombre}</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="borrarEps('${d.id}')">Eliminar</button>
+      </div>
+    `).join('');
+  } catch(err){
+    console.error('Error cargando EPS:', err);
+    lista.innerHTML = '<div class="empty-state">No se pudieron cargar las EPS.</div>';
   }
-
-  lista.innerHTML = snap.docs.map(d => `
-    <div class="order-row">
-      <div class="order-info"><div class="name">${d.data().nombre}</div></div>
-      <button class="btn btn-ghost btn-sm" onclick="borrarEps('${d.id}')">Eliminar</button>
-    </div>
-  `).join('');
 }
 
 // Poblar el <select> de EPS en el formulario del médico, a partir de la lista del admin.
@@ -1821,9 +1846,17 @@ async function registrarEps(){
 async function cargarEpsCuentasAdmin(){
   const pendientesList = document.getElementById('administrador-eps-pendientes-list');
   const activasList = document.getElementById('administrador-eps-cuentas-list');
-  if(!pendientesList || !activasList) return;
+  if(!pendientesList || !activasList || !auth.currentUser) return;
 
-  const snap = await epsCuentasRef.orderBy('creado','desc').get();
+  let snap;
+  try {
+    snap = await epsCuentasRef.orderBy('creado','desc').get();
+  } catch(err){
+    console.error('Error cargando cuentas EPS:', err);
+    pendientesList.innerHTML = '<div class="empty-state">No se pudieron cargar las solicitudes.</div>';
+    activasList.innerHTML = '<div class="empty-state">No se pudieron cargar las cuentas.</div>';
+    return;
+  }
   const todas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
   const pendientes = todas.filter(e => e.estado === 'pendiente');
@@ -1932,9 +1965,17 @@ async function registrarFarmacia(){
 async function cargarFarmaciasAdmin(){
   const pendientesList = document.getElementById('administrador-farmacias-pendientes-list');
   const activasList = document.getElementById('administrador-farmacias-activas-list');
-  if(!pendientesList || !activasList) return;
+  if(!pendientesList || !activasList || !auth.currentUser) return;
 
-  const snap = await farmaciasRef.orderBy('creado','desc').get();
+  let snap;
+  try {
+    snap = await farmaciasRef.orderBy('creado','desc').get();
+  } catch(err){
+    console.error('Error cargando farmacias:', err);
+    pendientesList.innerHTML = '<div class="empty-state">No se pudieron cargar las solicitudes.</div>';
+    activasList.innerHTML = '<div class="empty-state">No se pudieron cargar las farmacias.</div>';
+    return;
+  }
   const todas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
   const pendientes = todas.filter(f => f.estado === 'pendiente');
@@ -2277,9 +2318,17 @@ async function guardarDatosInstitucion(){
 async function cargarInstituciones(){
   const pendientesList = document.getElementById('administrador-instituciones-pendientes-list');
   const activasList = document.getElementById('administrador-instituciones-activas-list');
-  if(!pendientesList || !activasList) return;
+  if(!pendientesList || !activasList || !auth.currentUser) return;
 
-  const snap = await institucionesRef.orderBy('creado','desc').get();
+  let snap;
+  try {
+    snap = await institucionesRef.orderBy('creado','desc').get();
+  } catch(err){
+    console.error('Error cargando instituciones:', err);
+    pendientesList.innerHTML = '<div class="empty-state">No se pudieron cargar las solicitudes.</div>';
+    activasList.innerHTML = '<div class="empty-state">No se pudieron cargar los lugares de atención.</div>';
+    return;
+  }
   const todas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
   const pendientes = todas.filter(i => i.estado === 'pendiente');
@@ -2529,9 +2578,17 @@ async function registrarDomiciliario(){
 async function cargarDomiciliarios(){
   const pendientesList = document.getElementById('administrador-domiciliarios-pendientes-list');
   const activosList = document.getElementById('administrador-domiciliarios-activos-list');
-  if(!pendientesList || !activosList) return;
+  if(!pendientesList || !activosList || !auth.currentUser) return;
 
-  const snap = await domiciliariosRef.orderBy('creado','desc').get();
+  let snap;
+  try {
+    snap = await domiciliariosRef.orderBy('creado','desc').get();
+  } catch(err){
+    console.error('Error cargando domiciliarios:', err);
+    pendientesList.innerHTML = '<div class="empty-state">No se pudieron cargar las solicitudes.</div>';
+    activosList.innerHTML = '<div class="empty-state">No se pudieron cargar los domiciliarios.</div>';
+    return;
+  }
   const todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
   const pendientes = todos.filter(d => d.estado === 'pendiente');
