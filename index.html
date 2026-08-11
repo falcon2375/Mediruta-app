@@ -1292,6 +1292,16 @@ auth.onAuthStateChanged((user) => {
       document.getElementById(r+'-content').style.display = 'none';
       rolActual[r] = null;
     });
+    // Limpieza de variables de sesión de staff, para que no queden datos de
+    // una cuenta anterior visibles si otra cuenta del mismo rol inicia sesión
+    // después en el mismo navegador.
+    miEpsNombre = null;
+    miInstitucionId = null;
+    miInstitucionNombre = null;
+    miFarmaciaNombre = null;
+    miFarmaciaDireccion = null;
+    farmaciaEpsAutorizadas = new Set();
+    domiciliarioZona = null;
     actualizarSubtitulo(null);
     const domReg = document.getElementById('domiciliario-registro');
     if(domReg) domReg.style.display = 'none';
@@ -2883,13 +2893,23 @@ async function confirmarRegistroPaciente(){
   await buscarPedidoPaciente();
 }
 
+// Si la dirección guardada del paciente difiere de la que quedó en su pedido
+// pendiente, se actualiza el pedido Y se recalcula la zona a partir de la
+// nueva dirección — de lo contrario el pedido queda con la zona vieja y
+// ningún domiciliario de la zona correcta lo verá disponible.
 async function buscarPedidoPaciente(){
   const q = await pedidosRef.where('doc','==',pacienteCedula).orderBy('creado','desc').limit(1).get();
   if (!q.empty) {
     const pedidoDoc = q.docs[0];
     const pedidoData = pedidoDoc.data();
     if (pacienteDireccion && pedidoData.status === 'pendiente' && pedidoData.dir !== pacienteDireccion) {
-      await pedidosRef.doc(pedidoDoc.id).update({ dir: pacienteDireccion });
+      const { zona, lat, lng } = await determinarZona(pacienteDireccion);
+      await pedidosRef.doc(pedidoDoc.id).update({
+        dir: pacienteDireccion,
+        zona: zona || pedidoData.zona || null,
+        zonaLat: lat,
+        zonaLng: lng
+      });
     }
     pedidoActivoPaciente = pedidoDoc.id;
     localStorage.setItem('mediruta_pedido_id', pedidoDoc.id);
@@ -2978,8 +2998,15 @@ firebase.auth().onAuthStateChanged(async (user) => {
     document.getElementById('paciente-login-screen').style.display = 'block';
     detenerEscuchaPaciente();
     pedidoActivoPaciente = null;
+    // Se limpia también el localStorage: de lo contrario, si esta sesión de
+    // paciente se cierra "implícitamente" (p. ej. porque en la misma pestaña
+    // se inicia sesión como staff, ya que comparten el mismo objeto auth),
+    // el ID de pedido queda huérfano en el navegador y la próxima carga de
+    // la página intenta escuchar ese pedido sin sesión de paciente activa.
+    localStorage.removeItem('mediruta_pedido_id');
     pedidoPacienteDoc = null;
     pacienteCedula = null;
+    pacienteDireccion = null;
     renderPaciente();
   }
 });
