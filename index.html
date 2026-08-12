@@ -3672,8 +3672,27 @@ if (urlParams.get('staff') === '1') {
 renderAll();
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  const VERSION_LIMPIEZA = 'fr_sw_purge_v3';
+  window.addEventListener('load', async () => {
+    if(!localStorage.getItem(VERSION_LIMPIEZA)){
+      try {
+        const registros = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registros.map(r => r.unregister()));
+        if(window.caches && caches.keys){
+          const nombres = await caches.keys();
+          await Promise.all(nombres.map(n => caches.delete(n)));
+        }
+        localStorage.setItem(VERSION_LIMPIEZA, '1');
+        navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+        window.location.reload();
+        return;
+      } catch(e){
+        console.error('Error limpiando caché anterior:', e);
+      }
+    }
+    navigator.serviceWorker.register('service-worker.js').then(reg => {
+      reg.update().catch(()=>{});
+    }).catch(()=>{});
   });
 }
 
