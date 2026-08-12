@@ -2171,7 +2171,7 @@ async function cargarFarmaciasAutorizadas(){
 
   lista.innerHTML = epsFarmaciasCache.map(f => {
     return `
-      <div class="order-row">
+      <div class="order-row" data-vinculo-id="${f.id}">
         <div class="order-info">
           <div class="name">${f.farmaciaNombre}</div>
           <div class="meta">${f.farmaciaDireccion || 'Sin dirección registrada'}</div>
@@ -2182,6 +2182,59 @@ async function cargarFarmaciasAutorizadas(){
     `;
   }).join('');
   renderEPS();
+}
+
+// Menú desplegable (en el encabezado, botón "Farmacias inscritas") con las
+// farmacias de la red de la EPS, para consultarlas rápido sin bajar hasta
+// el listado completo. Al hacer clic en una, se resalta su fila abajo.
+function toggleMenuFarmaciasInscritas(btn){
+  const existente = document.getElementById('menu-farmacias-inscritas');
+  if(existente){
+    existente.remove();
+    return;
+  }
+
+  const menu = document.createElement('div');
+  menu.id = 'menu-farmacias-inscritas';
+  menu.style.cssText = 'position:absolute;z-index:50;min-width:260px;max-width:320px;max-height:320px;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 12px 30px rgba(0,0,0,0.15);';
+
+  const rect = btn.getBoundingClientRect();
+  menu.style.left = (rect.left + window.scrollX) + 'px';
+  menu.style.top = (rect.bottom + window.scrollY + 8) + 'px';
+
+  if(epsFarmaciasCache.length === 0){
+    menu.innerHTML = '<div style="padding:10px;font-size:0.8rem;color:var(--muted);">Aún no has inscrito farmacias en tu red.</div>';
+  } else {
+    menu.innerHTML = epsFarmaciasCache.map(f => `
+      <div style="padding:10px 10px;border-bottom:1px solid var(--line);cursor:pointer;" onclick="seleccionarFarmaciaInscrita('${f.id}')">
+        <div style="font-weight:600;font-size:0.85rem;">${f.farmaciaNombre}</div>
+        <div style="font-size:0.75rem;color:var(--muted);">${f.farmaciaDireccion || 'Sin dirección registrada'}</div>
+        <div style="font-size:0.75rem;color:var(--muted);">${f.farmaciaEmail}</div>
+      </div>
+    `).join('');
+  }
+
+  document.body.appendChild(menu);
+
+  const cerrarAlClickFuera = (ev) => {
+    if(!menu.contains(ev.target) && ev.target !== btn){
+      menu.remove();
+      document.removeEventListener('click', cerrarAlClickFuera);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', cerrarAlClickFuera), 0);
+}
+
+function seleccionarFarmaciaInscrita(vinculoId){
+  const menu = document.getElementById('menu-farmacias-inscritas');
+  if(menu) menu.remove();
+
+  const fila = document.querySelector('#eps-farmacias-list [data-vinculo-id="' + vinculoId + '"]');
+  if(!fila) return;
+  fila.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  fila.style.transition = 'background-color .3s ease';
+  fila.style.backgroundColor = '#EAF3EE';
+  setTimeout(() => { fila.style.backgroundColor = ''; }, 1500);
 }
 
 async function quitarFarmaciaAutorizada(docId){
@@ -3692,6 +3745,22 @@ if (urlParams.get('staff') === '1') {
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.getElementById('view-eps').classList.add('active');
     actualizarTitulo('eps');
+  }
+  // En este link, el botón "Paciente" no aplica: se convierte en un menú
+  // desplegable con las farmacias inscritas en la red de la EPS, para
+  // consultarlas y seleccionarlas rápidamente sin bajar hasta el listado completo.
+  const pacienteBtn = document.querySelector('.role-tabs button[data-role="paciente"]');
+  if(pacienteBtn){
+    const nuevoBtn = pacienteBtn.cloneNode(true);
+    nuevoBtn.removeAttribute('data-role');
+    nuevoBtn.classList.remove('active');
+    nuevoBtn.id = 'btn-farmacias-inscritas';
+    nuevoBtn.textContent = 'Farmacias inscritas ▾';
+    pacienteBtn.replaceWith(nuevoBtn);
+    nuevoBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleMenuFarmaciasInscritas(nuevoBtn);
+    });
   }
 } else {
   actualizarTitulo('paciente');
