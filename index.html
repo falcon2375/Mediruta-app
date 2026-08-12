@@ -1448,6 +1448,15 @@ rolesRef.doc(user.uid).get().then(async (doc) => {
         const feDireccion = document.getElementById('fe-direccion');
         if(feNombre) feNombre.value = farmData.nombre || '';
         if(feDireccion) feDireccion.value = farmData.direccion || '';
+        // Sincroniza (o crea si falta) su propio registro en el directorio
+        // público, para farmacias que se registraron antes de que este
+        // directorio existiera.
+        farmaciasDirectorioRef.doc(user.uid).set({
+          nombre: farmData.nombre || user.email,
+          direccion: farmData.direccion || '',
+          email: farmData.email || user.email,
+          estado: farmData.estado || 'activo'
+        }, { merge: true }).catch(e => console.error('Error sincronizando directorio de farmacia:', e));
         await cargarMisEpsAutorizadas();
       }
 
