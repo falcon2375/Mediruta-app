@@ -1268,6 +1268,7 @@ const epsCuentasRef = db.collection('eps_cuentas');
 const institucionesRef = db.collection('instituciones');
 const lotesRef = db.collection('lotes');
 const farmaciasRef = db.collection('farmacias');
+const farmaciasDirectorioRef = db.collection('farmacias_directorio');
 const epsFarmaciasRef = db.collection('eps_farmacias');
 let confirmationResult = null;
 let pacienteCedula = null;
@@ -1961,6 +1962,11 @@ async function registrarFarmacia(){
       estado: 'pendiente',
       creado: firebase.firestore.FieldValue.serverTimestamp()
     });
+    await farmaciasDirectorioRef.doc(uid).set({
+      nombre, direccion, email,
+      estado: 'pendiente',
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+    });
     // El listener de auth.onAuthStateChanged se encarga de mostrar la pantalla "pendiente".
   } catch(err){
     console.error(err);
@@ -2023,6 +2029,7 @@ async function cargarFarmaciasAdmin(){
 async function aprobarFarmacia(uid){
   await rolesRef.doc(uid).update({ estado: 'activo' });
   await farmaciasRef.doc(uid).update({ estado: 'activo' });
+  await farmaciasDirectorioRef.doc(uid).update({ estado: 'activo' }).catch(()=>{});
   alert('Farmacia aprobada.');
   cargarFarmaciasAdmin();
 }
@@ -2031,6 +2038,7 @@ async function rechazarFarmacia(uid){
   if(!confirm('¿Rechazar esta solicitud?')) return;
   await rolesRef.doc(uid).update({ estado: 'rechazado' });
   await farmaciasRef.doc(uid).update({ estado: 'rechazado' });
+  await farmaciasDirectorioRef.doc(uid).update({ estado: 'rechazado' }).catch(()=>{});
   cargarFarmaciasAdmin();
 }
 
@@ -2049,6 +2057,7 @@ async function guardarDatosFarmacia(){
 
   try {
     await farmaciasRef.doc(auth.currentUser.uid).update({ nombre, direccion });
+    await farmaciasDirectorioRef.doc(auth.currentUser.uid).update({ nombre, direccion }).catch(()=>{});
     miFarmaciaNombre = nombre;
     miFarmaciaDireccion = direccion;
     const nombreLabel = document.getElementById('farmacia-nombre-label');
@@ -2066,22 +2075,10 @@ async function guardarDatosFarmacia(){
 // y de paso confirma (completa con su propio ID/nombre/dirección) cualquier
 // vínculo que una EPS haya creado apuntando a su correo, ya que la EPS no
 // puede leer los datos de la farmacia directamente.
+// Trae la lista de EPS que autorizaron a ESTA farmacia a despachar sus pedidos.
 async function cargarMisEpsAutorizadas(){
   if(!auth.currentUser) return;
   try {
-    const propioEmail = (auth.currentUser.email || '').toLowerCase();
-    const pendientesSnap = await epsFarmaciasRef.where('farmaciaEmail','==',propioEmail).get();
-    const pendientes = pendientesSnap.docs.filter(d => !d.data().farmaciaId);
-
-    if(pendientes.length > 0){
-      await Promise.all(pendientes.map(d => d.ref.update({
-        farmaciaId: auth.currentUser.uid,
-        farmaciaNombre: miFarmaciaNombre || auth.currentUser.email,
-        farmaciaDireccion: miFarmaciaDireccion || '',
-        estadoVinculo: 'confirmado'
-      }).catch(e => console.error('Error confirmando vínculo con EPS:', e))));
-    }
-
     const snap = await epsFarmaciasRef.where('farmaciaId','==',auth.currentUser.uid).get();
     farmaciaEpsAutorizadas = new Set(snap.docs.map(d => d.data().eps));
   } catch(err){
@@ -2092,12 +2089,12 @@ async function cargarMisEpsAutorizadas(){
 }
 
 // ---------- EPS: autorizar farmacias de su red (por correo) ----------
-// El ID del vínculo combina EPS + correo de la farmacia, para poder crearlo
-// sin necesitar leer la colección de farmacias (evita depender de permisos
-// de lectura que la cuenta de EPS no tiene). El vínculo queda "pendiente"
-// hasta que la propia farmacia, con su sesión, complete sus datos.
-function idVinculoEpsFarmacia(nombreEps, correoFarmacia){
-  return nombreEps + '__' + correoFarmacia.toLowerCase();
+// El ID del vínculo combina EPS + ID real de la farmacia, tal como lo exigen
+// las reglas de Firestore. Como una cuenta de EPS no tiene permiso para leer
+// la colección "farmacias" directamente, el ID real se resuelve a través del
+// directorio público "farmacias_directorio" (solo nombre/dirección/correo/estado).
+function idVinculoEpsFarmacia(nombreEps, farmaciaId){
+  return nombreEps + '__' + farmaciaId;
 }
 
 async function agregarFarmaciaAutorizada(){
@@ -2117,18 +2114,25 @@ async function agregarFarmaciaAutorizada(){
   }
 
   try {
-    const docId = idVinculoEpsFarmacia(miEpsNombre, correo);
+    const snap = await farmaciasDirectorioRef.where('email','==',correo).where('estado','==','activo').limit(1).get();
+    if(snap.empty){
+      errorBox.textContent = 'No se encontró una farmacia activa con ese correo.';
+      errorBox.classList.add('show');
+      return;
+    }
+    const farmDoc = snap.docs[0];
+    const farmData = farmDoc.data();
+    const docId = idVinculoEpsFarmacia(miEpsNombre, farmDoc.id);
 
     await epsFarmaciasRef.doc(docId).set({
       eps: miEpsNombre,
-      farmaciaId: null,
-      farmaciaEmail: correo,
-      farmaciaNombre: null,
-      farmaciaDireccion: null,
-      estadoVinculo: 'pendiente',
+      farmaciaId: farmDoc.id,
+      farmaciaEmail: farmData.email,
+      farmaciaNombre: farmData.nombre,
+      farmaciaDireccion: farmData.direccion || '',
       epsId: auth.currentUser.uid,
       creado: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+    });
 
     document.getElementById('ef-correo').value = '';
     cargarFarmaciasAutorizadas();
@@ -2157,13 +2161,12 @@ async function cargarFarmaciasAutorizadas(){
   }
 
   lista.innerHTML = epsFarmaciasCache.map(f => {
-    const confirmada = !!f.farmaciaId;
     return `
       <div class="order-row">
         <div class="order-info">
-          <div class="name">${confirmada ? f.farmaciaNombre : f.farmaciaEmail}</div>
-          <div class="meta">${confirmada ? (f.farmaciaDireccion || 'Sin dirección registrada') : 'Pendiente: la farmacia debe iniciar sesión para confirmar el vínculo'}</div>
-          ${confirmada ? `<div class="meta">${f.farmaciaEmail}</div>` : ''}
+          <div class="name">${f.farmaciaNombre}</div>
+          <div class="meta">${f.farmaciaDireccion || 'Sin dirección registrada'}</div>
+          <div class="meta">${f.farmaciaEmail}</div>
         </div>
         <button class="btn btn-ghost btn-sm" onclick="quitarFarmaciaAutorizada('${f.id}')">Quitar</button>
       </div>
