@@ -2229,12 +2229,18 @@ function seleccionarFarmaciaInscrita(vinculoId){
   const menu = document.getElementById('menu-farmacias-inscritas');
   if(menu) menu.remove();
 
-  const fila = document.querySelector('#eps-farmacias-list [data-vinculo-id="' + vinculoId + '"]');
-  if(!fila) return;
-  fila.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  fila.style.transition = 'background-color .3s ease';
-  fila.style.backgroundColor = '#EAF3EE';
-  setTimeout(() => { fila.style.backgroundColor = ''; }, 1500);
+  const f = epsFarmaciasCache.find(x => x.id === vinculoId);
+  if(!f || !f.farmaciaEmail) return;
+
+  const asunto = encodeURIComponent('Autorización de entrega de medicamentos - ' + (miEpsNombre || 'EPS'));
+  const cuerpo = encodeURIComponent(
+    'Hola ' + (f.farmaciaNombre || '') + ',\n\n' +
+    'Te escribimos desde ' + (miEpsNombre || 'nuestra EPS') + ' para autorizar la entrega de medicamentos a través de FarmaRuta.\n\n' +
+    'Quedamos atentos a la confirmación.\n\n' +
+    'Saludos.'
+  );
+
+  window.location.href = 'mailto:' + f.farmaciaEmail + '?subject=' + asunto + '&body=' + cuerpo;
 }
 
 async function quitarFarmaciaAutorizada(docId){
