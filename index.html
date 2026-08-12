@@ -1340,11 +1340,8 @@ rolesRef.doc(user.uid).get().then(async (doc) => {
         actualizarSubtitulo('Lugar de atención');
         try {
           const consultorioSnap = await db.collection('consultorios').doc(user.uid).get();
-          if(consultorioSnap.exists && consultorioSnap.data().institucionId){
-            const instSnap = await institucionesRef.doc(consultorioSnap.data().institucionId).get();
-            if(instSnap.exists && instSnap.data().nombre){
-              actualizarSubtitulo(instSnap.data().nombre);
-            }
+          if(consultorioSnap.exists && consultorioSnap.data().institucionNombre){
+            actualizarSubtitulo(consultorioSnap.data().institucionNombre);
           }
         } catch(e){ console.error('Error cargando lugar de atención del consultorio:', e); }
       }
@@ -2261,6 +2258,7 @@ async function crearConsultorioInstitucion(){
         nombre: nombreConsultorio,
         email: email,
         institucionId: auth.currentUser.uid,
+        institucionNombre: miInstitucionNombre || '',
         creado: firebase.firestore.FieldValue.serverTimestamp(),
         creadoPor: auth.currentUser.uid
       });
@@ -2323,6 +2321,18 @@ async function guardarDatosInstitucion(){
     miInstitucionNombre = nombre;
     const nombreLabel = document.getElementById('institucion-nombre-label');
     if(nombreLabel) nombreLabel.textContent = nombre;
+
+    try {
+      const consultoriosSnap = await db.collection('consultorios').where('institucionId','==',auth.currentUser.uid).get();
+      if(!consultoriosSnap.empty){
+        const batch = db.batch();
+        consultoriosSnap.docs.forEach(doc => {
+          batch.update(doc.ref, { institucionNombre: nombre });
+        });
+        await batch.commit();
+      }
+    } catch(e){ console.error('Error actualizando nombre en consultorios:', e); }
+
     alert('Datos actualizados.');
   } catch(err){
     console.error(err);
