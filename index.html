@@ -1080,8 +1080,10 @@ Ibuprofeno 400mg x 10 tabletas"></textarea>
       <div class="card">
         <h2>Farmacias autorizadas para despachar tus pedidos</h2>
         <p class="sub">Solo estas farmacias podrán ver y despachar los pedidos de tus afiliados.</p>
-        <label>Correo de la farmacia</label>
-        <input type="email" id="ef-correo" placeholder="contacto@farmacia.com">
+        <label>Buscar farmacia por nombre</label>
+<input type="text" id="ef-busqueda" placeholder="Escribe el nombre de la farmacia..." autocomplete="off" oninput="filtrarFarmaciasDirectorio(this.value)">
+<div id="ef-sugerencias" style="position:relative; margin-top:4px;"></div>
+<input type="hidden" id="ef-correo" value="">
         <div class="login-error" id="ef-error"></div>
         <div style="margin-top:12px;">
           <button class="btn btn-primary" style="width:100%;" onclick="agregarFarmaciaAutorizada()">Agregar farmacia</button>
@@ -2105,7 +2107,99 @@ async function cargarMisEpsAutorizadas(){
 function idVinculoEpsFarmacia(nombreEps, farmaciaId){
   return nombreEps + '__' + farmaciaId;
 }
+// ---- Buscador de farmacias por nombre (reemplaza la búsqueda por correo) ----
 
+let catalogoFarmaciasActivas = [];
+let catalogoFarmaciasCargado = false;
+
+// Carga una sola vez todas las farmacias activas del directorio. Como es una
+// lectura pública para cualquier autenticado (regla: allow read: if estaAutenticado()),
+// se hace una sola consulta y se filtra en el navegador mientras el usuario escribe,
+// en vez de golpear Firestore en cada tecla.
+async function cargarCatalogoFarmaciasDirectorio(){
+  try {
+    const snap = await farmaciasDirectorioRef.where('estado','==','activo').get();
+    catalogoFarmaciasActivas = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    catalogoFarmaciasCargado = true;
+  } catch(err){
+    console.error('Error cargando catálogo de farmacias:', err);
+  }
+}
+
+function filtrarFarmaciasDirectorio(texto){
+  const cont = document.getElementById('ef-sugerencias');
+  const q = texto.trim().toLowerCase();
+
+  if(!catalogoFarmaciasCargado){
+    cargarCatalogoFarmaciasDirectorio().then(() => filtrarFarmaciasDirectorio(texto));
+    return;
+  }
+
+  if(!q){
+    cont.innerHTML = '';
+    return;
+  }
+
+  const coincidencias = catalogoFarmaciasActivas
+    .filter(f => (f.nombre || '').toLowerCase().includes(q))
+    .slice(0, 8);
+
+  if(coincidencias.length === 0){
+    cont.innerHTML = '<div style="padding:8px; color:#888;">Sin resultados</div>';
+    return;
+  }
+
+  cont.innerHTML = coincidencias.map(f => `
+    <div class="sugerencia-farmacia"
+         style="padding:8px; border:1px solid #ddd; border-top:none; cursor:pointer; background:#fff;"
+         onclick="seleccionarFarmaciaDirectorio('${f.id}')">
+      <strong>${(f.nombre || '').replace(/</g,'&lt;')}</strong><br>
+      <span style="font-size:0.85em; color:#666;">${(f.direccion || '').replace(/</g,'&lt;')}</span>
+    </div>
+  `).join('');
+}
+
+// Agrega el vínculo EPS↔Farmacia directamente a partir del ID seleccionado en
+// el buscador, sin necesidad de otra consulta a Firestore (ya tenemos los
+// datos en catalogoFarmaciasActivas).
+async function seleccionarFarmaciaDirectorio(farmaciaId){
+  const errorBox = document.getElementById('ef-error');
+  errorBox.classList.remove('show');
+
+  if(!miEpsNombre){
+    errorBox.textContent = 'Tu cuenta no tiene una EPS asignada.';
+    errorBox.classList.add('show');
+    return;
+  }
+
+  const farmData = catalogoFarmaciasActivas.find(f => f.id === farmaciaId);
+  if(!farmData){
+    errorBox.textContent = 'No se encontró esa farmacia, intenta buscar de nuevo.';
+    errorBox.classList.add('show');
+    return;
+  }
+
+  try {
+    const docId = idVinculoEpsFarmacia(miEpsNombre, farmaciaId);
+    await epsFarmaciasRef.doc(docId).set({
+      eps: miEpsNombre,
+      farmaciaId: farmaciaId,
+      farmaciaEmail: farmData.email || '',
+      farmaciaNombre: farmData.nombre,
+      farmaciaDireccion: farmData.direccion || '',
+      epsId: auth.currentUser.uid,
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    document.getElementById('ef-busqueda').value = '';
+    document.getElementById('ef-sugerencias').innerHTML = '';
+    cargarFarmaciasAutorizadas();
+  } catch(err){
+    console.error(err);
+    errorBox.textContent = 'Error: ' + err.message;
+    errorBox.classList.add('show');
+  }
+}
 async function agregarFarmaciaAutorizada(){
   const correo = document.getElementById('ef-correo').value.trim().toLowerCase();
   const errorBox = document.getElementById('ef-error');
