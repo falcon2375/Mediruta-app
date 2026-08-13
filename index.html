@@ -2322,21 +2322,7 @@ function toggleMenuFarmaciasInscritas(btn){
 function seleccionarFarmaciaInscrita(vinculoId){
   const menu = document.getElementById('menu-farmacias-inscritas');
   if(menu) menu.remove();
-
-  const f = epsFarmaciasCache.find(x => x.id === vinculoId);
-  if(!f || !f.farmaciaEmail) return;
-
-  const asunto = encodeURIComponent('Autorización de entrega de medicamentos - ' + (miEpsNombre || 'EPS'));
-  const cuerpo = encodeURIComponent(
-    'Hola ' + (f.farmaciaNombre || '') + ',\n\n' +
-    'Te escribimos desde ' + (miEpsNombre || 'nuestra EPS') + ' para autorizar la entrega de medicamentos a través de FarmaRuta.\n\n' +
-    'Quedamos atentos a la confirmación.\n\n' +
-    'Saludos.'
-  );
-
-  window.location.href = 'mailto:' + f.farmaciaEmail + '?subject=' + asunto + '&body=' + cuerpo;
 }
-
 async function quitarFarmaciaAutorizada(docId){
   if(!confirm('¿Quitar esta farmacia de tu red autorizada?')) return;
   await epsFarmaciasRef.doc(docId).delete();
