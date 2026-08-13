@@ -3560,8 +3560,10 @@ function renderPaciente(){
   sinPedidos.style.display = 'none';
   trackingCard.style.display = 'block';
 
-  const ped = pedidoPacienteDoc;
+const ped = pedidoPacienteDoc;
+if(!rolActual || (!rolActual.farmacia && !rolActual.eps && !rolActual.domiciliario && !rolActual.medico && !rolActual.institucion)){
   actualizarSubtitulo(ped.nombre);
+}
   document.getElementById('p-track-med').textContent = ped.med;
   document.getElementById('p-track-id').textContent = ped.codigo;
 
